@@ -14,6 +14,8 @@ import {
   Clock,
   Pencil,
   Link2,
+  Star,
+  Lock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { Show, Episode } from '@/lib/types';
@@ -48,6 +50,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     duration: '',
   });
   const [busy, setBusy] = useState(false);
+  const [togglingFreeFor, setTogglingFreeFor] = useState<string | null>(null);
 
   // New show / movie creation
   const [addShowOpen, setAddShowOpen] = useState(false);
@@ -194,6 +197,21 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const handleDeleteEpisode = async (episodeId: string) => {
     if (!confirm('Delete this episode? This cannot be undone.')) return;
     const { error } = await supabase.from('episodes').delete().eq('id', episodeId);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    await loadShows();
+  };
+
+  const handleToggleFree = async (episodeId: string, nextIsFree: boolean) => {
+    setTogglingFreeFor(episodeId);
+    setError('');
+    const { error } = await supabase
+      .from('episodes')
+      .update({ is_free: nextIsFree })
+      .eq('id', episodeId);
+    setTogglingFreeFor(null);
     if (error) {
       setError(error.message);
       return;
@@ -493,6 +511,15 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                         · {ep.duration} min
                                       </span>
                                     )}
+                                    {ep.is_free ? (
+                                      <span className="flex items-center gap-1 text-[#22C55E]">
+                                        <Star className="h-3 w-3 fill-[#22C55E]" /> Free (no subscription needed)
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center gap-1 text-white/40">
+                                        <Lock className="h-3 w-3" /> Locked (VIP only)
+                                      </span>
+                                    )}
                                   </div>
                                   {isUploading && (
                                     <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
@@ -503,6 +530,29 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                     </div>
                                   )}
                                 </div>
+                                <button
+                                  onClick={() => handleToggleFree(ep.id, !ep.is_free)}
+                                  disabled={togglingFreeFor === ep.id}
+                                  title={
+                                    ep.is_free
+                                      ? 'Free for everyone — click to lock behind subscription'
+                                      : 'Locked (VIP only) — click to unlock for testing'
+                                  }
+                                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:opacity-50 ${
+                                    ep.is_free
+                                      ? 'border-[#FFD23F]/40 bg-[#FFD23F]/10 text-[#FFD23F] hover:bg-[#FFD23F]/20'
+                                      : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                                  }`}
+                                >
+                                  {togglingFreeFor === ep.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : ep.is_free ? (
+                                    <Star className="h-3.5 w-3.5 fill-[#FFD23F]" />
+                                  ) : (
+                                    <Lock className="h-3.5 w-3.5" />
+                                  )}
+                                  {ep.is_free ? 'Unlocked' : 'Locked'}
+                                </button>
                                 <button
                                   onClick={() => triggerFileUpload(ep.id)}
                                   disabled={isUploading}
