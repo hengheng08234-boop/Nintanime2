@@ -55,3 +55,12 @@ body {
 .img-fade.loaded {
   opacity: 1;
 }
+
+/* Coverflow hero background crossfade */
+.hero-bg {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.hero-bg.loaded {
+  opacity: 1;
+}

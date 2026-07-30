@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Play,
-  Info,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -37,6 +36,8 @@ interface HomeScreenProps {
 
 export type Tab = 'home' | 'search' | 'watchlist' | 'account';
 
+const HERO_AUTO_MS = 5500;
+
 export default function HomeScreen({
   onSelectShow,
   onOpenProfile,
@@ -58,11 +59,11 @@ export default function HomeScreen({
   const [error, setError] = useState<string | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [query, setQuery] = useState('');
+  const [interacting, setInteracting] = useState(false);
 
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef(0);
   const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [interacting, setInteracting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -74,7 +75,6 @@ export default function HomeScreen({
           fetchGenres(),
         ]);
         if (!active) return;
-        // Fall back to top-rated shows if fewer than 4 featured exist
         let banner = f;
         if (f.length < 4) {
           const fallback = [...s].sort((a, b) => b.rating - a.rating);
@@ -96,43 +96,36 @@ export default function HomeScreen({
     };
   }, []);
 
-  // Auto-advance banner every ~5.5s, pause while interacting/swiping
+  const wrap = useCallback(
+    (i: number) => (bannerShows.length + i) % bannerShows.length,
+    [bannerShows.length],
+  );
+
+  const goToSlide = useCallback(
+    (i: number) => setHeroIndex(wrap(i)),
+    [wrap],
+  );
+
+  const nextSlide = useCallback(() => goToSlide(heroIndex + 1), [heroIndex, goToSlide]);
+  const prevSlide = useCallback(() => goToSlide(heroIndex - 1), [heroIndex, goToSlide]);
+
+  const pauseThenResume = useCallback(() => {
+    setInteracting(true);
+    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => setInteracting(false), 3500);
+  }, []);
+
+  // Auto-advance the centered card every ~5.5s, pause while interacting
   useEffect(() => {
     if (bannerShows.length <= 1 || interacting) {
       if (autoTimer.current) clearInterval(autoTimer.current);
       return;
     }
-    autoTimer.current = setInterval(
-      () => setHeroIndex((i) => (i + 1) % bannerShows.length),
-      5500,
-    );
+    autoTimer.current = setInterval(() => goToSlide(heroIndex + 1), HERO_AUTO_MS);
     return () => {
       if (autoTimer.current) clearInterval(autoTimer.current);
     };
-  }, [bannerShows.length, interacting]);
-
-  const goToSlide = useCallback(
-    (i: number) => {
-      setHeroIndex((i + bannerShows.length) % bannerShows.length);
-    },
-    [bannerShows.length],
-  );
-
-  const syncSlideFromScroll = useCallback(() => {
-    const node = scrollerRef.current;
-    if (!node || bannerShows.length === 0) return;
-    const idx = Math.round(node.scrollLeft / node.clientWidth);
-    if (idx !== heroIndex) setHeroIndex(idx);
-  }, [bannerShows.length, heroIndex]);
-
-  const handleScroll = useCallback(() => {
-    setInteracting(true);
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    resumeTimer.current = setTimeout(() => {
-      setInteracting(false);
-      syncSlideFromScroll();
-    }, 180);
-  }, [syncSlideFromScroll]);
+  }, [bannerShows.length, interacting, heroIndex, goToSlide]);
 
   const hero = bannerShows[heroIndex];
 
@@ -169,174 +162,112 @@ export default function HomeScreen({
     );
   }
 
+  const heroVisible = hero && !query.trim();
+
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
-      {/* Top nav — minimal on mobile: logo, lang, subscribe */}
-      <header className="fixed inset-x-0 top-0 z-40">
-        <div
-          className="transition-colors duration-300"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 70%, rgba(10,10,15,0) 100%)',
-          }}
-        >
-          <div className="mx-auto flex max-w-[1400px] items-center gap-4 px-4 py-3.5 sm:px-8 sm:py-4">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF4D5E] to-[#E63946] shadow-[0_0_18px_rgba(255,77,94,0.4)]">
-                <Play className="h-4 w-4 fill-white text-white" />
-              </div>
+      {/* Compact header — slim row: logo + tagline on left, controls on right */}
+      <header className="fixed inset-x-0 top-0 z-50 bg-[#0A0A0F]/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-8 sm:py-3.5">
+          {/* Logo mark + wordmark + tagline */}
+          <button
+            onClick={() => {
+              setActiveTab('home');
+              setQuery('');
+            }}
+            className="flex items-center gap-2.5"
+          >
+            <img
+              src="/assets/images/logo-transparent.png"
+              alt="NINT ANIME"
+              className="h-9 w-9 drop-shadow-[0_0_14px_rgba(255,77,94,0.45)]"
+            />
+            <div className="flex flex-col leading-none">
               <span
-                className="hidden text-xl font-black tracking-wider sm:inline"
+                className="text-lg font-black tracking-wider text-white"
                 style={{ fontFamily: '"Bebas Neue", Inter, sans-serif' }}
               >
                 NINT ANIME
               </span>
+              <span className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.2em] text-white/40 sm:inline">
+                {t.tagline}
+              </span>
             </div>
+          </button>
 
-            {/* Desktop nav links */}
-            <nav className="hidden items-center gap-5 text-sm font-medium text-white/70 md:flex">
-              <span className="cursor-pointer text-white transition hover:text-[#FF4D5E]">{t.navHome}</span>
-              <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navSeries}</span>
-              <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navMovies}</span>
-              <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navMyList}</span>
-            </nav>
+          {/* Desktop nav links */}
+          <nav className="ml-4 hidden items-center gap-5 text-sm font-medium text-white/70 md:flex">
+            <span className="cursor-pointer text-white transition hover:text-[#FF4D5E]">{t.navHome}</span>
+            <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navSeries}</span>
+            <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navMovies}</span>
+            <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navMyList}</span>
+          </nav>
 
-            <div className="ml-auto flex items-center gap-2 sm:gap-3">
-              {/* Desktop search box */}
-              <div className="relative hidden sm:block">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t.searchPlaceholder}
-                  className="w-48 rounded-full border border-white/10 bg-white/[0.04] py-2 pl-9 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:w-64 focus:border-[#FF4D5E]/50 focus:bg-white/[0.07]"
-                />
-              </div>
-              {/* Language switcher — visible on all screens */}
-              <LanguageSwitcher lang={lang} onChange={setLang} />
-              {/* Subscribe button — visible on all screens */}
-              <button
-                onClick={onOpenSubscription}
-                className="flex items-center gap-1.5 rounded-full border border-[#FFD23F]/30 bg-[#FFD23F]/10 px-3 py-1.5 text-xs font-bold text-[#FFD23F] transition hover:bg-[#FFD23F]/20"
-              >
-                <Crown className="h-3.5 w-3.5" />
-                <span className="hidden xs:inline sm:inline">
-                  {subscribed ? t.premium : t.subscribe}
-                </span>
-              </button>
-              {/* Profile avatar — desktop only, mobile uses bottom nav */}
-              <button
-                onClick={onOpenProfile}
-                className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF4D5E] to-[#FFD23F] ring-2 ring-white/10 transition hover:ring-[#FF4D5E]/50 sm:flex"
-                aria-label="Open profile"
-              >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-4 w-4 text-white" />
-                )}
-              </button>
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            {/* Desktop search box */}
+            <div className="relative hidden sm:block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                className="w-48 rounded-full border border-white/10 bg-white/[0.04] py-2 pl-9 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:w-64 focus:border-[#FF4D5E]/50 focus:bg-white/[0.07]"
+              />
             </div>
+            {/* Language switcher — visible on all screens */}
+            <LanguageSwitcher lang={lang} onChange={setLang} />
+            {/* Subscribe button — visible on all screens */}
+            <button
+              onClick={onOpenSubscription}
+              className="flex items-center gap-1.5 rounded-full border border-[#FFD23F]/30 bg-[#FFD23F]/10 px-3 py-1.5 text-xs font-bold text-[#FFD23F] transition hover:bg-[#FFD23F]/20"
+            >
+              <Crown className="h-3.5 w-3.5" />
+              <span>{subscribed ? t.premium : t.subscribe}</span>
+            </button>
+            {/* Profile avatar — desktop only, mobile uses bottom nav */}
+            <button
+              onClick={onOpenProfile}
+              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF4D5E] to-[#FFD23F] ring-2 ring-white/10 transition hover:ring-[#FF4D5E]/50 sm:flex"
+              aria-label="Open profile"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-4 w-4 text-white" />
+              )}
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Cover banner carousel — full width, ~55-60vh on mobile */}
-      {hero && !query.trim() && (
-        <section className="relative w-full">
-          <div
-            ref={scrollerRef}
-            onScroll={handleScroll}
-            onTouchStart={() => setInteracting(true)}
-            onTouchEnd={() => {
-              if (resumeTimer.current) clearTimeout(resumeTimer.current);
-              resumeTimer.current = setTimeout(() => {
-                setInteracting(false);
-                syncSlideFromScroll();
-              }, 180);
-            }}
-            className="no-scrollbar flex w-full snap-x snap-mandatory overflow-x-auto"
-            style={{ height: 'min(58vh, 480px)' }}
-          >
-            {bannerShows.map((s) => (
-              <div
-                key={s.id}
-                className="relative h-full w-full shrink-0 snap-center"
-              >
-                <img
-                  src={s.banner_url ?? s.poster_url ?? ''}
-                  alt={s.title}
-                  className="h-full w-full object-cover"
-                  draggable={false}
-                />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(180deg, rgba(10,10,15,0.3) 0%, rgba(10,10,15,0) 35%, rgba(10,10,15,0.6) 75%, rgba(10,10,15,1) 100%)',
-                  }}
-                />
-                {/* Slide content */}
-                <div className="absolute inset-x-0 bottom-0 px-4 pb-20 sm:bottom-0 sm:px-8 sm:pb-10">
-                  <div className="mx-auto max-w-[1400px]">
-                    <div className="max-w-xl">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="rounded bg-[#FF4D5E] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
-                          {t.featured}
-                        </span>
-                        <span className="flex items-center gap-1 text-sm font-semibold text-[#FFD23F]">
-                          <Star className="h-4 w-4 fill-[#FFD23F]" /> {Number(s.rating).toFixed(1)}
-                        </span>
-                      </div>
-                      <h2
-                        className="text-3xl font-black leading-[0.95] sm:text-5xl"
-                        style={{ fontFamily: '"Bebas Neue", Inter, sans-serif', letterSpacing: '0.02em' }}
-                      >
-                        {s.title.toUpperCase()}
-                      </h2>
-                      <button
-                        onClick={() => onSelectShow(s)}
-                        className="mt-4 flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-black transition hover:bg-white/90 active:scale-95"
-                      >
-                        <Play className="h-5 w-5 fill-black" /> {t.play}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Dot indicators — mobile-friendly, bottom centered */}
-          {bannerShows.length > 1 && (
-            <div className="absolute inset-x-0 bottom-16 z-10 flex justify-center gap-1.5 sm:bottom-6">
-              {bannerShows.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setHeroIndex(i);
-                    scrollerRef.current?.scrollTo({
-                      left: i * (scrollerRef.current?.clientWidth ?? 0),
-                      behavior: 'smooth',
-                    });
-                  }}
-                  aria-label={`Go to slide ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === heroIndex ? 'w-5 bg-[#FF4D5E]' : 'w-1.5 bg-white/40'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+      {/* Coverflow hero carousel */}
+      {heroVisible && (
+        <CoverflowHero
+          shows={bannerShows}
+          index={heroIndex}
+          hero={hero}
+          onSelectShow={onSelectShow}
+          onPrev={prevSlide}
+          onNext={nextSlide}
+          onGoTo={goToSlide}
+          onTouchStart={(x) => {
+            touchStartX.current = x;
+            pauseThenResume();
+          }}
+          onTouchEnd={(x) => {
+            const dx = x - touchStartX.current;
+            if (dx < -40) nextSlide();
+            else if (dx > 40) prevSlide();
+          }}
+          t={t}
+        />
       )}
 
       {/* Subscription / VIP promo card */}
       {!subscribed && (
         <div
           className={`mx-auto max-w-[1400px] px-4 sm:px-8 ${
-            hero && !query.trim() ? 'pt-6' : 'pt-28'
+            heroVisible ? 'pt-6' : 'pt-28'
           }`}
         >
           <div className="relative overflow-hidden rounded-2xl border border-[#FFD23F]/25 bg-gradient-to-br from-[#1A1410] via-[#1E1A15] to-[#1A1410]">
@@ -402,7 +333,7 @@ export default function HomeScreen({
             )}
           </section>
         ) : (
-          <div className={hero && !query.trim() ? '' : subscribed ? 'pt-28' : 'pt-6'}>
+          <div className={heroVisible ? '' : subscribed ? 'pt-28' : 'pt-6'}>
             <RailRow
               icon={<TrendingUp className="h-5 w-5 text-[#FF4D5E]" />}
               title={t.trendingNow}
@@ -532,6 +463,243 @@ export default function HomeScreen({
   );
 }
 
+/* ---------- Coverflow hero ---------- */
+
+type TranslationText = {
+  featured: string;
+  play: string;
+};
+
+interface CoverflowHeroProps {
+  shows: Show[];
+  index: number;
+  hero: Show;
+  onSelectShow: (s: Show) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onGoTo: (i: number) => void;
+  onTouchStart: (x: number) => void;
+  onTouchEnd: (x: number) => void;
+  t: TranslationText;
+}
+
+function CoverflowHero({
+  shows,
+  index,
+  hero,
+  onSelectShow,
+  onPrev,
+  onNext,
+  onGoTo,
+  onTouchStart,
+  onTouchEnd,
+  t,
+}: CoverflowHeroProps) {
+  const [bgLoaded, setBgLoaded] = useState(false);
+  const bg = hero.banner_url ?? hero.poster_url ?? '';
+
+  // Reset the loaded flag whenever the background image changes so the
+  // crossfade restarts for each new centered show.
+  useEffect(() => {
+    setBgLoaded(false);
+  }, [hero.id]);
+
+  return (
+    <section
+      className="relative w-full overflow-hidden pt-[72px]"
+      style={{ height: 'min(62vh, 520px)' }}
+      onTouchStart={(e) => onTouchStart(e.touches[0].clientX)}
+      onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
+    >
+      {/* Blurred ambient background driven by the centered show */}
+      <div className="pointer-events-none absolute inset-0">
+        {bg && (
+          <img
+            key={hero.id}
+            src={bg}
+            alt=""
+            aria-hidden
+            className={`hero-bg ${bgLoaded ? 'loaded' : ''} absolute inset-0 h-full w-full scale-125 object-cover blur-3xl`}
+            onLoad={() => setBgLoaded(true)}
+            draggable={false}
+          />
+        )}
+        {/* Warm gold/orange ambient glow blending with the app palette */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255,170,60,0.18) 0%, rgba(10,10,15,0) 60%), radial-gradient(ellipse 60% 50% at 70% 80%, rgba(255,77,94,0.16) 0%, rgba(10,10,15,0) 55%)',
+          }}
+        />
+        <div className="absolute inset-0 bg-[#0A0A0F]/45" />
+        {/* Fade the top into the header and the bottom into the page */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0) 18%, rgba(10,10,15,0) 70%, rgba(10,10,15,1) 100%)',
+          }}
+        />
+      </div>
+
+      {/* Cards deck */}
+      <div className="relative flex h-full items-center justify-center">
+        {shows.length > 1 &&
+          [-2, -1, 1, 2].map((offset) => {
+            const i = (shows.length + index + offset) % shows.length;
+            return (
+              <SideCard
+                key={shows[i].id}
+                show={shows[i]}
+                offset={offset}
+                onClick={() => onGoTo(i)}
+              />
+            );
+          })}
+
+        {/* Center featured card */}
+        <button
+          onClick={() => onSelectShow(hero)}
+          className="relative z-20 flex flex-col items-center"
+          style={{
+            width: '62%',
+            maxWidth: 300,
+            transform: 'translateZ(0)',
+          }}
+        >
+          <div
+            className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)] ring-1 ring-white/15 transition-transform duration-500"
+          >
+            <img
+              src={hero.poster_url ?? hero.banner_url ?? ''}
+              alt={hero.title}
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(10,10,15,0) 45%, rgba(10,10,15,0.55) 72%, rgba(10,10,15,0.95) 100%)',
+              }}
+            />
+            {/* FEATURED pill */}
+            <span className="absolute left-3 top-3 rounded-md bg-[#FF4D5E] px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-lg">
+              {t.featured}
+            </span>
+            {/* Title + rating */}
+            <div className="absolute inset-x-0 bottom-0 px-4 pb-4 text-center">
+              <h2
+                className="truncate text-lg font-black leading-tight text-white sm:text-xl"
+                style={{ fontFamily: '"Bebas Neue", Inter, sans-serif', letterSpacing: '0.02em' }}
+              >
+                {hero.title.toUpperCase()}
+              </h2>
+              <div className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-[#FFD23F]">
+                <Star className="h-3.5 w-3.5 fill-[#FFD23F]" /> {Number(hero.rating).toFixed(1)}
+              </div>
+            </div>
+          </div>
+
+          {/* Play button — featured card only */}
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-black shadow-lg transition active:scale-95">
+            <Play className="h-5 w-5 fill-black" /> {t.play}
+          </div>
+        </button>
+
+        {/* Chevron arrows — desktop only, swipe handles mobile */}
+        <button
+          onClick={onPrev}
+          className="absolute left-4 z-30 hidden h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60 active:scale-90 md:flex"
+          aria-label="Previous"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <button
+          onClick={onNext}
+          className="absolute right-4 z-30 hidden h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60 active:scale-90 md:flex"
+          aria-label="Next"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Dot indicators */}
+      {shows.length > 1 && (
+        <div className="absolute inset-x-0 bottom-3 z-30 flex justify-center gap-1.5">
+          {shows.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => onGoTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all ${
+                i === index ? 'w-5 bg-[#FF4D5E]' : 'w-1.5 bg-white/40'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+interface SideCardProps {
+  show: Show;
+  offset: number; // -2, -1, 1, 2
+  onClick: () => void;
+}
+
+function SideCard({ show, offset, onClick }: SideCardProps) {
+  const isNear = Math.abs(offset) === 1;
+  // Offsets -1/+1 sit close to center and peek past the edges; -2/+2 recede further.
+  const translateX = offset * 58; // percent of the center card width
+  const scale = isNear ? 0.78 : 0.6;
+  const z = isNear ? 10 : 5;
+  const opacity = isNear ? 0.85 : 0.4;
+
+  return (
+    <button
+      onClick={onClick}
+      className="absolute z-10"
+      style={{
+        width: '62%',
+        maxWidth: 300,
+        transform: `translateX(${translateX}%) scale(${scale})`,
+        zIndex: z,
+        opacity,
+        transition: 'transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease',
+        pointerEvents: 'auto',
+      }}
+      aria-label={show.title}
+    >
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
+        <img
+          src={show.poster_url ?? show.banner_url ?? ''}
+          alt={show.title}
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(10,10,15,0) 50%, rgba(10,10,15,0.85) 100%)',
+          }}
+        />
+        <div className="absolute inset-x-0 bottom-0 px-3 pb-3 text-center">
+          <p className="truncate text-sm font-bold text-white">{show.title}</p>
+          <div className="mt-0.5 flex items-center justify-center gap-1 text-xs font-semibold text-[#FFD23F]">
+            <Star className="h-3 w-3 fill-[#FFD23F]" /> {Number(show.rating).toFixed(1)}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ---------- Bottom tab ---------- */
+
 interface BottomTabProps {
   icon: React.ReactNode;
   label: string;
@@ -552,6 +720,8 @@ function BottomTab({ icon, label, active, onClick }: BottomTabProps) {
     </button>
   );
 }
+
+/* ---------- Content rail row ---------- */
 
 interface RailRowProps {
   title: string;

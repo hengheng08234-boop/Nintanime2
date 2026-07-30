@@ -23,6 +23,7 @@ export const appText = {
     signIn: 'Sign In',
 
     // Home nav / hero
+    tagline: 'Stream · Discover · Obsess',
     navHome: 'Home',
     navSeries: 'Series',
     navMovies: 'Movies',
@@ -121,6 +122,7 @@ export const appText = {
     signIn: 'ចូលគណនី',
 
     // Home nav / hero
+    tagline: 'មើល · ស្វែងរក · ចូលចិត្ត',
     navHome: 'ទំព័រដើម',
     navSeries: 'ស៊េរី',
     navMovies: 'ភាពយន្ត',
