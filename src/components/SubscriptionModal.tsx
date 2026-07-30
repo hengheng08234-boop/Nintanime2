@@ -1,0 +1,669 @@
+import { useEffect, useRef, useState } from 'react';
+import {
+  X,
+  Crown,
+  Clock,
+  QrCode,
+  Download,
+  Upload,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  Zap,
+  ShieldCheck,
+  Sparkles,
+  Calendar,
+  DollarSign,
+  Hash,
+  FileText,
+  Percent,
+  Plus,
+  Minus,
+} from 'lucide-react';
+import { supabase } from '@/lib/supabase/supabaseClient';
+
+type PlanKey = '1m' | '2m' | '6m' | '1y';
+
+const PLANS: {
+  key: PlanKey;
+  months: number;
+  price: number;
+  label: string;
+  tag?: string;
+}[] = [
+  { key: '1m', months: 1, price: 2, label: '1 Month' },
+  { key: '2m', months: 2, price: 4, label: '2 Months' },
+  { key: '6m', months: 6, price: 7, label: '6 Months', tag: 'Popular' },
+  { key: '1y', months: 12, price: 28, label: '12 Months', tag: 'Best Value' },
+];
+
+const PLAN_QR: Record<PlanKey, string> = {
+  '1m': '/assets/images/subscription-1m.png',
+  '2m': '/assets/images/subscription-1m.png',
+  '6m': '/assets/images/subscription-1m.png',
+  '1y': '/assets/images/subscription-1y.png',
+};
+
+interface Props {
+  onClose: () => void;
+}
+
+type PayMode = 'auto' | 'manual';
+type AutoStatus = 'idle' | 'loading' | 'waiting' | 'confirmed' | 'expired' | 'error';
+
+export default function SubscriptionModal({ onClose }: Props) {
+  const [selected, setSelected] = useState<PlanKey>('1y');
+  const [payMode, setPayMode] = useState<PayMode>('manual');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const [transactionId, setTransactionId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
+  const [amountPaid, setAmountPaid] = useState('');
+  const [discount, setDiscount] = useState('0');
+  const [description, setDescription] = useState('');
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
+  const proofInputRef = useRef<HTMLInputElement>(null);
+
+  const [autoStatus, setAutoStatus] = useState<AutoStatus>('idle');
+  const [autoQr, setAutoQr] = useState<{
+    requestId: string;
+    qrImage: string;
+    abapayDeeplink?: string;
+  } | null>(null);
+  const [autoError, setAutoError] = useState('');
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopTimers = () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  };
+
+  useEffect(() => stopTimers, []);
+  useEffect(() => {
+    stopTimers();
+    setAutoStatus('idle');
+    setAutoQr(null);
+    setAutoError('');
+  }, [selected]);
+
+  const startPolling = (requestId: string) => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      const { data } = await supabase.functions.invoke('check-qr-status', {
+        body: { requestId },
+      });
+      if (data?.status === 'confirmed') {
+        stopTimers();
+        setAutoStatus('confirmed');
+        setSubmitted(true);
+      } else if (data?.status === 'expired') {
+        stopTimers();
+        setAutoStatus('expired');
+      }
+    }, 3000);
+  };
+
+  const handleGenerateAutoQr = async () => {
+    setAutoStatus('loading');
+    setAutoError('');
+    const { data, error } = await supabase.functions.invoke('create-qr-payment', {
+      body: { plan: selected },
+    });
+    if (error || data?.error) {
+      setAutoStatus('error');
+      setAutoError(
+        data?.error || data?.detail || error?.message || 'Something went wrong',
+      );
+      return;
+    }
+    setAutoQr({
+      requestId: data.requestId,
+      qrImage: data.qrImage,
+      abapayDeeplink: data.abapayDeeplink,
+    });
+    setSecondsLeft(data.expiresInSeconds || 900);
+    setAutoStatus('waiting');
+    startPolling(data.requestId);
+
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  const formatCountdown = (s: number) =>
+    `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+  const selectedPlan = PLANS.find((p) => p.key === selected)!;
+  const effectiveAmount =
+    amountPaid.trim() === '' ? selectedPlan.price : parseFloat(amountPaid) || 0;
+  const discountVal = parseFloat(discount) || 0;
+  const finalAmount = Math.max(effectiveAmount - discountVal, 0);
+
+  const openDetails = () => {
+    setAmountPaid(String(selectedPlan.price));
+    setShowDetails(true);
+  };
+
+  const handleProofUpload = async (rawFile: File) => {
+    setProofUploading(true);
+    setError('');
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      setProofUploading(false);
+      return;
+    }
+    const ext = rawFile.name.split('.').pop() || 'jpg';
+    const path = `subscription-proofs/${userData.user.id}-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, rawFile, { upsert: true });
+    if (uploadError) {
+      setProofUploading(false);
+      setError(uploadError.message);
+      return;
+    }
+    const { data: pubData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(path);
+    setProofUrl(pubData.publicUrl);
+    setProofUploading(false);
+    setShowDetails(true);
+  };
+
+  const handleSaveQr = () => {
+    const a = document.createElement('a');
+    a.href = PLAN_QR[selected];
+    a.download = `nint-anime-payment-qr-${selected}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const handleConfirmPaid = async () => {
+    setError('');
+    setBusy(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error: insertError } = await supabase
+      .from('subscription_requests')
+      .insert({
+        user_id: userData.user?.id,
+        plan: selectedPlan.key,
+        amount: finalAmount,
+        discount: discountVal,
+        description: description.trim() || null,
+        transaction_id: transactionId.trim() || null,
+        payment_date: paymentDate,
+        proof_url: proofUrl,
+      });
+    setBusy(false);
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(10,10,15,0.8)', backdropFilter: 'blur(6px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#14141C] text-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          className="relative overflow-hidden rounded-t-3xl px-5 pb-5 pt-5"
+          style={{
+            background:
+              'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+          }}
+        >
+          <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-[#FF4D5E]/10 blur-2xl" />
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 text-white/60 transition hover:text-white"
+          >
+            <X size={20} />
+          </button>
+          <div className="relative flex flex-col items-center pt-1 text-center">
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
+              <Crown size={24} className="text-[#FFD23F]" />
+            </div>
+            <p className="text-base font-extrabold tracking-wide">
+              Subscription Plans
+            </p>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <Clock size={12} className="text-white/60" />
+              <p className="text-[11px] text-white/60">
+                Subscribe to unlock every episode
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4">
+          {!submitted ? (
+            <>
+              {/* Plan cards */}
+              <div className="mb-4 grid grid-cols-2 gap-2">
+                {PLANS.map((p) => {
+                  const isSelected = selected === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => {
+                        setSelected(p.key);
+                        setShowDetails(false);
+                      }}
+                      className={`relative rounded-2xl border-2 p-2.5 text-center transition-all duration-200 ${
+                        isSelected
+                          ? '-translate-y-0.5 border-[#FF4D5E] bg-[#FF4D5E]/10'
+                          : 'border-white/10 bg-white/[0.02]'
+                      }`}
+                    >
+                      {p.tag && (
+                        <span className="absolute -top-2 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full bg-[#FFD23F] px-1.5 py-0.5 text-[8px] font-bold text-black">
+                          <Sparkles size={7} />
+                          {p.tag}
+                        </span>
+                      )}
+                      <p className="mt-1 text-[11px] font-semibold text-white">
+                        {p.label}
+                      </p>
+                      <p className="mt-0.5 text-lg font-extrabold text-[#FF4D5E]">
+                        ${p.price}
+                      </p>
+                      <p className="text-[10px] text-white/40">
+                        ${(p.price / p.months).toFixed(2)}/mo
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Payment mode tabs */}
+              <div className="mb-3 flex gap-1.5 rounded-xl bg-white/[0.04] p-1">
+                <button
+                  onClick={() => setPayMode('auto')}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
+                    payMode === 'auto'
+                      ? 'bg-[#FF4D5E] text-white'
+                      : 'text-white/50'
+                  }`}
+                >
+                  <Zap
+                    size={13}
+                    className={payMode === 'auto' ? 'text-[#FFD23F]' : ''}
+                  />
+                  Auto Pay
+                </button>
+                <button
+                  onClick={() => setPayMode('manual')}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
+                    payMode === 'manual'
+                      ? 'bg-[#FF4D5E] text-white'
+                      : 'text-white/50'
+                  }`}
+                >
+                  <QrCode size={13} />
+                  Manual
+                </button>
+              </div>
+
+              {/* Amount summary */}
+              <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FF4D5E]">
+                    <DollarSign size={15} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-white/50">
+                      Amount
+                    </p>
+                    <p className="text-[10px] text-white/50">
+                      {selectedPlan.label}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-2xl font-extrabold text-[#FF4D5E]">
+                  ${selectedPlan.price}
+                </p>
+              </div>
+
+              {/* AUTO PAY */}
+              {payMode === 'auto' && (
+                <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="mb-3 flex items-center justify-center gap-1.5">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#22C55E]/15">
+                      <ShieldCheck size={13} className="text-[#22C55E]" />
+                    </div>
+                    <p className="text-[11px] font-bold text-white">
+                      Scan to Pay Automatically
+                    </p>
+                  </div>
+
+                  {autoStatus === 'idle' && (
+                    <div className="text-center">
+                      <p className="mb-3 text-[10px] leading-relaxed text-white/50">
+                        Generate a one-time QR and the system will auto-confirm
+                        your payment.
+                      </p>
+                      <button
+                        onClick={handleGenerateAutoQr}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#FF4D5E] py-3 text-xs font-bold text-white transition hover:bg-[#E63946]"
+                      >
+                        <Zap size={14} className="text-[#FFD23F]" />
+                        Generate Payment QR
+                      </button>
+                    </div>
+                  )}
+
+                  {autoStatus === 'loading' && (
+                    <div className="mx-auto flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10">
+                      <Loader2 size={28} className="animate-spin text-[#FF4D5E]" />
+                      <p className="text-[10px] text-white/50">
+                        Generating QR...
+                      </p>
+                    </div>
+                  )}
+
+                  {autoStatus === 'waiting' && autoQr && (
+                    <>
+                      <div className="mb-3 flex justify-center">
+                        <div className="relative">
+                          <img
+                            src={autoQr.qrImage}
+                            alt="Payment QR"
+                            className="h-44 w-44 rounded-2xl border-2 border-[#FF4D5E]/30 bg-white p-2 object-contain"
+                          />
+                          <div className="absolute -inset-1 animate-pulse rounded-2xl border-2 border-[#FF4D5E]/30" />
+                        </div>
+                      </div>
+                      <div className="mb-2 flex items-center justify-center gap-1.5">
+                        <Loader2
+                          size={12}
+                          className="animate-spin text-[#FF4D5E]"
+                        />
+                        <p className="text-[10px] font-semibold text-white">
+                          Waiting for payment... ({formatCountdown(secondsLeft)})
+                        </p>
+                      </div>
+                      {autoQr.abapayDeeplink && (
+                        <a
+                          href={autoQr.abapayDeeplink}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                        >
+                          Open Banking App
+                        </a>
+                      )}
+                    </>
+                  )}
+
+                  {autoStatus === 'expired' && (
+                    <div className="py-2 text-center">
+                      <p className="mb-3 text-[11px] text-[#EF4444]">
+                        This QR code has expired
+                      </p>
+                      <button
+                        onClick={handleGenerateAutoQr}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF4D5E] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#E63946]"
+                      >
+                        <RefreshCw size={13} />
+                        Generate New QR
+                      </button>
+                    </div>
+                  )}
+
+                  {autoStatus === 'error' && (
+                    <div className="py-2 text-center">
+                      <p className="mb-3 text-[11px] text-[#EF4444]">
+                        {autoError}
+                      </p>
+                      <button
+                        onClick={handleGenerateAutoQr}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF4D5E] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#E63946]"
+                      >
+                        <RefreshCw size={13} />
+                        Try Again
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* MANUAL PAY */}
+              {payMode === 'manual' && (
+                <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="mb-3 flex items-center justify-center gap-1.5">
+                    <QrCode size={14} className="text-[#FF4D5E]" />
+                    <p className="text-[11px] font-bold text-white">
+                      Scan to Pay
+                    </p>
+                  </div>
+                  <div className="mb-3 flex justify-center">
+                    <img
+                      key={selected}
+                      src={PLAN_QR[selected]}
+                      alt="Payment QR"
+                      className="h-40 w-40 rounded-2xl border-2 border-[#FF4D5E]/30 bg-white p-2 object-contain"
+                    />
+                  </div>
+
+                  <div className="mb-1.5 grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleSaveQr}
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                    >
+                      <Download size={13} />
+                      Save QR
+                    </button>
+                    <input
+                      ref={proofInputRef}
+                      type="file"
+                      accept="image/*"
+                      disabled={proofUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleProofUpload(file);
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => proofInputRef.current?.click()}
+                      disabled={proofUploading}
+                      className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                      style={{
+                        backgroundColor: proofUrl
+                          ? '#22C55E'
+                          : '#FF4D5E',
+                      }}
+                    >
+                      {proofUploading ? (
+                        'Uploading...'
+                      ) : proofUrl ? (
+                        <>
+                          <CheckCircle2 size={13} />
+                          Verified
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={13} />
+                          Upload Proof
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Payment details accordion */}
+                  <div className="mt-2 overflow-hidden rounded-xl border border-white/10">
+                    <button
+                      onClick={() =>
+                        showDetails ? setShowDetails(false) : openDetails()
+                      }
+                      className="flex w-full items-center justify-between px-3 py-2.5"
+                    >
+                      <span className="text-[11px] font-bold text-white">
+                        Payment details
+                      </span>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
+                        {showDetails ? (
+                          <Minus size={14} className="text-white" />
+                        ) : (
+                          <Plus size={14} className="text-white" />
+                        )}
+                      </span>
+                    </button>
+
+                    {showDetails && (
+                      <div
+                        className="space-y-2.5 px-3 pb-3"
+                        style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+                      >
+                        <div className="pt-2.5">
+                          <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
+                            <Calendar size={12} /> Payment date
+                          </label>
+                          <input
+                            type="date"
+                            value={paymentDate}
+                            onChange={(e) => setPaymentDate(e.target.value)}
+                            className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
+                              <DollarSign size={12} /> Amount paid
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={amountPaid}
+                              onChange={(e) => setAmountPaid(e.target.value)}
+                              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
+                              <Percent size={12} /> Discount
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={discount}
+                              onChange={(e) => setDiscount(e.target.value)}
+                              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
+                            <FileText size={12} /> Description
+                          </label>
+                          <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={2}
+                            placeholder="Optional note"
+                            className="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
+                            <Hash size={12} /> Transaction ID (optional)
+                          </label>
+                          <input
+                            value={transactionId}
+                            onChange={(e) => setTransactionId(e.target.value)}
+                            placeholder="Copy from your banking app"
+                            className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
+                          />
+                        </div>
+                        <div
+                          className="flex justify-between pt-1 text-[11px]"
+                          style={{
+                            borderTop: '1px solid rgba(255,255,255,0.08)',
+                          }}
+                        >
+                          <span className="text-white/50">Total due</span>
+                          <span className="font-extrabold text-[#FF4D5E]">
+                            ${finalAmount.toFixed(2)}
+                          </span>
+                        </div>
+                        {error && (
+                          <p className="text-center text-xs text-[#EF4444]">
+                            {error}
+                          </p>
+                        )}
+                        <button
+                          onClick={handleConfirmPaid}
+                          disabled={busy}
+                          className="w-full rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                        >
+                          {busy ? 'Sending...' : "I've Paid"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="py-8 text-center">
+              <div
+                className={`mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full ${
+                  autoStatus === 'confirmed'
+                    ? 'bg-[#22C55E]/15'
+                    : 'bg-[#FF4D5E]/15'
+                }`}
+              >
+                <CheckCircle2
+                  size={36}
+                  className={
+                    autoStatus === 'confirmed'
+                      ? 'text-[#22C55E]'
+                      : 'text-[#FF4D5E]'
+                  }
+                />
+              </div>
+              <p className="mt-1 text-sm font-bold text-white">
+                {autoStatus === 'confirmed'
+                  ? 'Payment confirmed!'
+                  : 'Request received'}
+              </p>
+              <p className="mt-1.5 px-6 text-xs leading-relaxed text-white/50">
+                {autoStatus === 'confirmed'
+                  ? 'Your subscription is now active. Enjoy unlimited streaming!'
+                  : 'Please wait for admin verification (usually within a few hours).'}
+              </p>
+              <button
+                onClick={onClose}
+                className="mt-4 rounded-xl bg-[#FF4D5E] px-5 py-2 text-xs font-bold text-white transition hover:bg-[#E63946]"
+              >
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
