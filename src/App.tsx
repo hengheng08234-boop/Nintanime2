@@ -93,7 +93,7 @@ function App() {
   };
 
   const handlePlayEpisode = (episode: Episode, show: ShowWithGenres) => {
-    if (isSubscribed(profile)) {
+    if (isSubscribed(profile) || episode.is_free) {
       addToContinueWatching(show, episode, episode.episode_number - 1);
       setScreen({ name: 'player', episode, show });
     } else {
@@ -175,6 +175,7 @@ function App() {
         show={screen.show}
         onBack={() => setScreen({ name: 'home' })}
         onPlayEpisode={handlePlayEpisode}
+        subscribed={isSubscribed(profile)}
       />
     );
   }
