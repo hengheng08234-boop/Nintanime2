@@ -13,7 +13,6 @@ export interface Profile {
 
 export function isSubscribed(profile: Profile | null): boolean {
   if (!profile) return false;
-  if (profile.is_admin) return true;
   if (!profile.subscription_expires_at) return false;
   return new Date(profile.subscription_expires_at) > new Date();
 }
