@@ -23,8 +23,6 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
-import { useLang } from '@/lib/useLang';
-import { appText } from '@/lib/appTranslations';
 
 type PlanKey = '1m' | '2m' | '6m' | '1y';
 
@@ -32,20 +30,14 @@ const PLANS: {
   key: PlanKey;
   months: number;
   price: number;
-  tag?: 'popular' | 'bestValue';
+  label: string;
+  tag?: string;
 }[] = [
-  { key: '1m', months: 1, price: 2 },
-  { key: '2m', months: 2, price: 4 },
-  { key: '6m', months: 6, price: 7, tag: 'popular' },
-  { key: '1y', months: 12, price: 28, tag: 'bestValue' },
+  { key: '1m', months: 1, price: 2, label: '1 Month' },
+  { key: '2m', months: 2, price: 4, label: '2 Months' },
+  { key: '6m', months: 6, price: 7, label: '6 Months', tag: 'Popular' },
+  { key: '1y', months: 12, price: 28, label: '12 Months', tag: 'Best Value' },
 ];
-
-const PLAN_LABEL_KEY: Record<PlanKey, 'plan1m' | 'plan2m' | 'plan6m' | 'plan1y'> = {
-  '1m': 'plan1m',
-  '2m': 'plan2m',
-  '6m': 'plan6m',
-  '1y': 'plan1y',
-};
 
 const PLAN_QR: Record<PlanKey, string> = {
   '1m': '/assets/images/subscription-1m.png',
@@ -64,8 +56,6 @@ type PayMode = 'auto' | 'manual';
 type AutoStatus = 'idle' | 'loading' | 'waiting' | 'confirmed' | 'expired' | 'error';
 
 export default function SubscriptionModal({ onClose }: Props) {
-  const { lang } = useLang();
-  const t = appText[lang];
   const [selected, setSelected] = useState<PlanKey>('1y');
   const [payMode, setPayMode] = useState<PayMode>('auto');
   const [busy, setBusy] = useState(false);
@@ -250,52 +240,36 @@ export default function SubscriptionModal({ onClose }: Props) {
       >
         {/* Header */}
         <div
-          className="relative overflow-hidden px-5 pb-7 pt-6"
+          className="relative overflow-hidden px-5 pb-6 pt-5"
           style={{
             background:
               'radial-gradient(120% 140% at 50% -20%, #262035 0%, #171626 45%, #0d0d16 100%)',
           }}
         >
-          <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-[#FFD23F]/12 blur-3xl" />
-          <div className="pointer-events-none absolute -left-12 top-10 h-36 w-36 rounded-full bg-[#FF4D5E]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#FFD23F]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#FF4D5E]/15 blur-3xl" />
           <button
             onClick={onClose}
             className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
           >
             <X size={17} />
           </button>
-          <div className="relative flex flex-col items-center pt-1 text-center">
-            <div className="relative mb-3">
-              <div className="absolute inset-0 scale-125 rounded-full bg-[#FFD23F]/20 blur-xl" />
-              <div
-                className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white/5"
-                style={{ boxShadow: '0 10px 26px rgba(0,0,0,0.4)' }}
-              >
-                <img
-                  src="/assets/images/logo-transparent.png"
-                  alt="Nint Anime"
-                  className="h-full w-full object-contain p-1.5"
-                />
-              </div>
-              <div
-                className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full"
-                style={{
-                  background: 'linear-gradient(145deg, #FFE27A 0%, #FFD23F 45%, #E8A917 100%)',
-                  boxShadow: '0 4px 10px rgba(255,210,63,0.45)',
-                }}
-              >
-                <Crown size={12} className="text-[#3A2A00]" fill="#3A2A00" strokeWidth={0} />
-              </div>
+          <div className="relative flex flex-col items-center pt-2 text-center">
+            <div
+              className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl"
+              style={{
+                background: 'linear-gradient(145deg, #FFE27A 0%, #FFD23F 45%, #E8A917 100%)',
+                boxShadow: '0 8px 24px rgba(255,210,63,0.35)',
+              }}
+            >
+              <Crown size={26} className="text-[#3A2A00]" fill="#3A2A00" strokeWidth={0} />
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#FFD23F]/90">
-              NINT ANIME
-            </p>
-            <p className="mt-1 text-lg font-extrabold tracking-wide">
-              {t.subModalTitle}
-            </p>
+            <p className="text-lg font-extrabold tracking-wide">Go Premium</p>
             <div className="mt-1.5 flex items-center gap-1.5">
               <Sparkles size={12} className="text-[#FFD23F]" />
-              <p className="text-[11px] text-white/55">{t.subModalSubtitle}</p>
+              <p className="text-[11px] text-white/55">
+                Unlimited episodes, zero ads, instant unlock
+              </p>
             </div>
           </div>
         </div>
@@ -336,11 +310,11 @@ export default function SubscriptionModal({ onClose }: Props) {
                           }}
                         >
                           <Sparkles size={7} />
-                          {p.tag === 'popular' ? t.tagPopular : t.tagBestValue}
+                          {p.tag}
                         </span>
                       )}
                       <p className="mt-1 text-[11px] font-semibold text-white/80">
-                        {t[PLAN_LABEL_KEY[p.key]]}
+                        {p.label}
                       </p>
                       <p
                         className="mt-0.5 text-xl font-extrabold"
@@ -349,7 +323,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         ${p.price}
                       </p>
                       <p className="text-[10px] text-white/35">
-                        ${(p.price / p.months).toFixed(2)}{t.perMonth}
+                        ${(p.price / p.months).toFixed(2)}/mo
                       </p>
                     </button>
                   );
@@ -373,11 +347,9 @@ export default function SubscriptionModal({ onClose }: Props) {
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold text-white/45">
-                      {t.totalDue}
+                      Total due
                     </p>
-                    <p className="text-[10px] text-white/45">
-                      {t[PLAN_LABEL_KEY[selectedPlan.key]]}
-                    </p>
+                    <p className="text-[10px] text-white/45">{selectedPlan.label}</p>
                   </div>
                 </div>
                 <p className="text-2xl font-extrabold text-white">
@@ -399,7 +371,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   }
                 >
                   <Zap size={13} className={payMode === 'auto' ? 'text-black' : ''} />
-                  {t.instantUnlock}
+                  Instant Unlock
                 </button>
                 <button
                   onClick={() => setPayMode('manual')}
@@ -410,7 +382,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   }`}
                 >
                   <QrCode size={13} />
-                  {t.manualPay}
+                  Manual
                 </button>
               </div>
 
@@ -429,14 +401,15 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <ShieldCheck size={13} className="text-[#22C55E]" />
                     </div>
                     <p className="text-[11px] font-bold text-white">
-                      {t.payKhqrTitle}
+                      Pay with KHQR — unlocks automatically
                     </p>
                   </div>
 
                   {autoStatus === 'idle' && (
                     <div className="text-center">
                       <p className="mb-3 text-[10px] leading-relaxed text-white/50">
-                        {t.autoIdleDesc}
+                        Get a one-time QR code. The moment your bank confirms it,
+                        your Premium unlocks — no waiting, no proof to upload.
                       </p>
                       <button
                         onClick={handleGenerateAutoQr}
@@ -444,7 +417,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
                       >
                         <Zap size={14} />
-                        {t.generatePaymentQr}
+                        Generate Payment QR
                       </button>
 
                       <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
@@ -454,9 +427,9 @@ export default function SubscriptionModal({ onClose }: Props) {
                           className="h-7 w-7 rounded-[7px] object-cover"
                         />
                         <p className="text-left text-[10px] leading-tight text-white/45">
-                          {t.worksInstantlyPrefix}{' '}
+                          Works instantly with{' '}
                           <span className="font-semibold text-white/70">ABA Mobile</span>
-                          {' '}{t.worksInstantlySuffix}
+                          {' '}and any KHQR banking app
                         </p>
                       </div>
                     </div>
@@ -465,7 +438,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {autoStatus === 'loading' && (
                     <div className="mx-auto flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10">
                       <Loader2 size={28} className="animate-spin text-[#FFD23F]" />
-                      <p className="text-[10px] text-white/50">{t.generatingQr}</p>
+                      <p className="text-[10px] text-white/50">Generating QR...</p>
                     </div>
                   )}
 
@@ -484,7 +457,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <div className="mb-3 flex items-center justify-center gap-1.5">
                         <Loader2 size={12} className="animate-spin text-[#FFD23F]" />
                         <p className="text-[10px] font-semibold text-white">
-                          {t.autoVerifying} ({formatCountdown(secondsLeft)})
+                          Auto-verifying payment... ({formatCountdown(secondsLeft)})
                         </p>
                       </div>
 
@@ -505,17 +478,17 @@ export default function SubscriptionModal({ onClose }: Props) {
                           />
                           <span className="flex-1 text-left">
                             <span className="block text-[12px] font-bold text-white">
-                              {t.openAbaMobile}
+                              Open ABA Mobile
                             </span>
                             <span className="block text-[9.5px] text-white/70">
-                              {t.payOneTap}
+                              Pay in one tap, no need to scan
                             </span>
                           </span>
                           <ArrowRight size={16} className="text-white/80" />
                         </a>
                       )}
                       <p className="text-center text-[9.5px] text-white/35">
-                        {t.alreadyPaidNote}
+                        Already paid? This screen unlocks itself — just leave it open.
                       </p>
                     </>
                   )}
@@ -523,7 +496,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {autoStatus === 'expired' && (
                     <div className="py-2 text-center">
                       <p className="mb-3 text-[11px] text-[#EF4444]">
-                        {t.qrExpired}
+                        This QR code has expired
                       </p>
                       <button
                         onClick={handleGenerateAutoQr}
@@ -531,7 +504,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
                       >
                         <RefreshCw size={13} />
-                        {t.generateNewQr}
+                        Generate New QR
                       </button>
                     </div>
                   )}
@@ -545,7 +518,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
                       >
                         <RefreshCw size={13} />
-                        {t.tryAgain}
+                        Try Again
                       </button>
                     </div>
                   )}
@@ -557,7 +530,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                   <div className="mb-3 flex items-center justify-center gap-1.5">
                     <QrCode size={14} className="text-[#FF4D5E]" />
-                    <p className="text-[11px] font-bold text-white">{t.scanToPay}</p>
+                    <p className="text-[11px] font-bold text-white">Scan to Pay</p>
                   </div>
                   <div className="mb-3 flex justify-center">
                     <img
@@ -574,7 +547,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
                     >
                       <Download size={13} />
-                      {t.saveQr}
+                      Save QR
                     </button>
                     <input
                       ref={proofInputRef}
@@ -596,16 +569,16 @@ export default function SubscriptionModal({ onClose }: Props) {
                       }}
                     >
                       {proofUploading ? (
-                        t.uploading
+                        'Uploading...'
                       ) : proofUrl ? (
                         <>
                           <CheckCircle2 size={13} />
-                          {t.verified}
+                          Verified
                         </>
                       ) : (
                         <>
                           <Upload size={13} />
-                          {t.uploadProof}
+                          Upload Proof
                         </>
                       )}
                     </button>
@@ -620,7 +593,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       className="flex w-full items-center justify-between px-3 py-2.5"
                     >
                       <span className="text-[11px] font-bold text-white">
-                        {t.paymentDetails}
+                        Payment details
                       </span>
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
                         {showDetails ? (
@@ -638,7 +611,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       >
                         <div className="pt-2.5">
                           <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                            <Calendar size={12} /> {t.paymentDate}
+                            <Calendar size={12} /> Payment date
                           </label>
                           <input
                             type="date"
@@ -650,7 +623,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                              <DollarSign size={12} /> {t.amountPaidLabel}
+                              <DollarSign size={12} /> Amount paid
                             </label>
                             <input
                               type="number"
@@ -662,7 +635,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                           </div>
                           <div>
                             <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                              <Percent size={12} /> {t.discountLabel}
+                              <Percent size={12} /> Discount
                             </label>
                             <input
                               type="number"
@@ -675,24 +648,24 @@ export default function SubscriptionModal({ onClose }: Props) {
                         </div>
                         <div>
                           <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                            <FileText size={12} /> {t.descriptionLabel}
+                            <FileText size={12} /> Description
                           </label>
                           <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={2}
-                            placeholder={t.descPlaceholder}
+                            placeholder="Optional note"
                             className="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
                           />
                         </div>
                         <div>
                           <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                            <Hash size={12} /> {t.transactionIdLabel}
+                            <Hash size={12} /> Transaction ID (optional)
                           </label>
                           <input
                             value={transactionId}
                             onChange={(e) => setTransactionId(e.target.value)}
-                            placeholder={t.transactionIdPlaceholder}
+                            placeholder="Copy from your banking app"
                             className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
                           />
                         </div>
@@ -700,7 +673,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                           className="flex justify-between pt-1 text-[11px]"
                           style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
                         >
-                          <span className="text-white/50">{t.totalDue}</span>
+                          <span className="text-white/50">Total due</span>
                           <span className="font-extrabold text-[#FF4D5E]">
                             ${finalAmount.toFixed(2)}
                           </span>
@@ -713,7 +686,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                           disabled={busy}
                           className="w-full rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-60"
                         >
-                          {busy ? t.sending : t.ivePaid}
+                          {busy ? 'Sending...' : "I've Paid"}
                         </button>
                       </div>
                     )}
@@ -724,7 +697,7 @@ export default function SubscriptionModal({ onClose }: Props) {
               <div className="flex items-center justify-center gap-1.5 pb-1 pt-1">
                 <BadgeCheck size={11} className="text-white/30" />
                 <p className="text-[9.5px] text-white/30">
-                  {t.securedCheckout}
+                  Secured checkout · Powered by ABA PayWay KHQR
                 </p>
               </div>
             </>
@@ -756,17 +729,19 @@ export default function SubscriptionModal({ onClose }: Props) {
                 {autoStatus === 'confirmed' && (
                   <Crown size={15} className="text-[#FFD23F]" fill="#FFD23F" strokeWidth={0} />
                 )}
-                {autoStatus === 'confirmed' ? t.youArePremium : t.requestReceived}
+                {autoStatus === 'confirmed' ? "You're Premium!" : 'Request received'}
               </p>
               <p className="mt-1.5 px-6 text-xs leading-relaxed text-white/50">
-                {autoStatus === 'confirmed' ? t.confirmedDesc : t.pendingDesc}
+                {autoStatus === 'confirmed'
+                  ? 'Payment verified automatically. Unlimited streaming is unlocked now.'
+                  : 'Please wait for admin verification (usually within a few hours).'}
               </p>
               <button
                 onClick={onClose}
                 className="mt-4 rounded-xl px-6 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
                 style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
               >
-                {autoStatus === 'confirmed' ? t.startWatching : t.closeBtn}
+                {autoStatus === 'confirmed' ? 'Start Watching' : 'Close'}
               </button>
             </div>
           )}

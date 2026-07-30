@@ -14,6 +14,7 @@ import {
 import type { Episode, ShowWithGenres } from '@/lib/types';
 import { useLang } from '@/lib/useLang';
 import { appText } from '@/lib/appTranslations';
+import { supabase } from '@/lib/supabase/supabaseClient';
 
 interface VideoPlayerScreenProps {
   episode: Episode;
@@ -51,12 +52,43 @@ export default function VideoPlayerScreen({
   const [buffering, setBuffering] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [accessError, setAccessError] = useState('');
+  const [playUrl, setPlayUrl] = useState<string | null>(null);
+  const [resolving, setResolving] = useState(true);
+
+  // Resolve a short-lived, subscription-checked playback URL server-side.
+  // Nothing about the real storage path or a permanent link is ever
+  // exposed to the client.
+  useEffect(() => {
+    let cancelled = false;
+    setResolving(true);
+    setAccessError('');
+    setPlayUrl(null);
+
+    (async () => {
+      const { data, error } = await supabase.functions.invoke('get-video-url', {
+        body: { episodeId: episode.id },
+      });
+      if (cancelled) return;
+      if (error || data?.error) {
+        setAccessError(data?.error || error?.message || 'Unable to load video');
+        setResolving(false);
+        return;
+      }
+      setPlayUrl(data.url);
+      setResolving(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [episode.id]);
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !episode.video_url) return;
+    if (!v || !playUrl) return;
 
-    const url = episode.video_url;
+    const url = playUrl;
     setLoadError(false);
     let cancelled = false;
 
@@ -94,7 +126,7 @@ export default function VideoPlayerScreen({
     } else {
       v.src = url;
     }
-  }, [episode.video_url]);
+  }, [playUrl]);
 
   const togglePlay = () => {
     const v = videoRef.current;
@@ -153,13 +185,19 @@ export default function VideoPlayerScreen({
         className="relative h-full w-full"
         onMouseMove={revealControls}
         onClick={revealControls}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <video
           ref={videoRef}
           className="h-full w-full object-contain"
           autoPlay
           playsInline
+          controlsList="nodownload noremoteplayback noplaybackrate"
+          disablePictureInPicture
+          disableRemotePlayback
           onClick={togglePlay}
+          onContextMenu={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
@@ -168,6 +206,26 @@ export default function VideoPlayerScreen({
           onPlaying={() => setBuffering(false)}
           onError={() => setLoadError(true)}
         />
+
+        {/* Resolving playback URL */}
+        {resolving && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black">
+            <Loader2 className="h-8 w-8 animate-spin text-[#FF4D5E]" />
+          </div>
+        )}
+
+        {/* Access denied (not subscribed, etc.) */}
+        {!resolving && accessError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black text-center">
+            <p className="max-w-xs text-sm font-semibold text-white">{accessError}</p>
+            <button
+              onClick={onBack}
+              className="mt-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+            >
+              {t.goBack}
+            </button>
+          </div>
+        )}
 
         {/* Buffering spinner */}
         {buffering && !loadError && (

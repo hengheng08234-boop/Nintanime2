@@ -8,7 +8,6 @@ import {
   Building2,
   Clock,
   ChevronRight,
-  Lock,
 } from 'lucide-react';
 import type { Show, ShowWithGenres, Episode } from '@/lib/types';
 import { fetchShowById, fetchEpisodesByShow } from '@/lib/api';
@@ -19,14 +18,12 @@ interface ShowDetailScreenProps {
   show: Show;
   onBack: () => void;
   onPlayEpisode: (episode: Episode, show: ShowWithGenres) => void;
-  subscribed: boolean;
 }
 
 export default function ShowDetailScreen({
   show,
   onBack,
   onPlayEpisode,
-  subscribed,
 }: ShowDetailScreenProps) {
   const { lang } = useLang();
   const t = appText[lang];
@@ -193,79 +190,46 @@ export default function ShowDetailScreen({
               <p className="text-sm text-white/40">{t.noEpisodes}</p>
             ) : (
               <div className="space-y-3">
-                {episodes.map((ep) => {
-                  const locked = !subscribed && !ep.is_free;
-                  return (
-                    <button
-                      key={ep.id}
-                      onClick={() => detail && onPlayEpisode(ep, detail)}
-                      className={`group flex w-full items-center gap-4 overflow-hidden rounded-xl border p-3 text-left transition ${
-                        locked
-                          ? 'border-white/5 bg-[#14141C]/70 hover:border-[#FFD23F]/30 hover:bg-[#1E1E2A]/80'
-                          : 'border-white/5 bg-[#14141C] hover:border-[#FF4D5E]/30 hover:bg-[#1E1E2A]'
-                      }`}
-                    >
-                      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg sm:w-48">
-                        <img
-                          src={ep.thumbnail_url ?? show.banner_url ?? ''}
-                          alt={ep.title}
-                          loading="lazy"
-                          className={`h-full w-full object-cover transition group-hover:scale-105 ${
-                            locked ? 'brightness-[0.45] saturate-[0.6]' : ''
-                          }`}
-                        />
-                        {locked ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/25">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 ring-1 ring-[#FFD23F]/40 backdrop-blur-sm">
-                              <Lock className="h-4 w-4 text-[#FFD23F]" />
-                            </div>
-                            <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#FFD23F]">
-                              {t.epLockedBadge}
-                            </span>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E]">
-                                <Play className="h-4 w-4 fill-white text-white" />
-                              </div>
-                            </div>
-                            {ep.is_free && (
-                              <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-[#22C55E]/90 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-black">
-                                <Star className="h-2.5 w-2.5 fill-black" />
-                                {t.epFreeBadge}
-                              </span>
-                            )}
-                          </>
+                {episodes.map((ep) => (
+                  <button
+                    key={ep.id}
+                    onClick={() => detail && onPlayEpisode(ep, detail)}
+                    className="group flex w-full items-center gap-4 overflow-hidden rounded-xl border border-white/5 bg-[#14141C] p-3 text-left transition hover:border-[#FF4D5E]/30 hover:bg-[#1E1E2A]"
+                  >
+                    <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg sm:w-48">
+                      <img
+                        src={ep.thumbnail_url ?? show.banner_url ?? ''}
+                        alt={ep.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E]">
+                          <Play className="h-4 w-4 fill-white text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-white/50">
+                          {t.epShort} {ep.episode_number}
+                        </span>
+                        {ep.duration && (
+                          <span className="flex items-center gap-1 text-xs text-white/40">
+                            <Clock className="h-3 w-3" /> {fmtDuration(ep.duration)}
+                          </span>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white/50">
-                            {t.epShort} {ep.episode_number}
-                          </span>
-                          {ep.duration && (
-                            <span className="flex items-center gap-1 text-xs text-white/40">
-                              <Clock className="h-3 w-3" /> {fmtDuration(ep.duration)}
-                            </span>
-                          )}
-                          {locked && (
-                            <span className="flex items-center gap-1 text-xs font-semibold text-[#FFD23F]/80">
-                              <Lock className="h-3 w-3" /> {t.epLockedNote}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="mt-0.5 truncate text-base font-semibold text-white transition group-hover:text-[#FF4D5E]">
-                          {ep.title}
-                        </h3>
-                        <p className="mt-1 line-clamp-1 text-sm text-white/50">
-                          {ep.description}
-                        </p>
-                      </div>
-                      <ChevronRight className="hidden h-5 w-5 shrink-0 text-white/30 transition group-hover:text-[#FF4D5E] sm:block" />
-                    </button>
-                  );
-                })}
+                      <h3 className="mt-0.5 truncate text-base font-semibold text-white transition group-hover:text-[#FF4D5E]">
+                        {ep.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-1 text-sm text-white/50">
+                        {ep.description}
+                      </p>
+                    </div>
+                    <ChevronRight className="hidden h-5 w-5 shrink-0 text-white/30 transition group-hover:text-[#FF4D5E] sm:block" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
