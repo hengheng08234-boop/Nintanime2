@@ -259,26 +259,60 @@ export default function HomeScreen({ onSelectShow, onOpenProfile, onOpenSubscrip
         </section>
       )}
 
-      {/* Subscription banner */}
+      {/* Subscription / VIP promo card */}
       {!subscribed && (
-        <div className="mx-auto max-w-[1400px] px-4 pt-24 sm:px-8">
-          <button
-            onClick={onOpenSubscription}
-            className="flex w-full items-center gap-3 rounded-2xl border border-[#FFD23F]/20 bg-gradient-to-r from-[#FFD23F]/10 to-[#FF4D5E]/10 px-4 py-3 text-left transition hover:border-[#FFD23F]/40"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFD23F]/20">
-              <Clock className="h-5 w-5 text-[#FFD23F]" />
+        <div
+          className={`mx-auto max-w-[1400px] px-4 sm:px-8 ${
+            hero && !query.trim() ? 'pt-6' : 'pt-28'
+          }`}
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-[#FFD23F]/25 bg-gradient-to-br from-[#1A1410] via-[#1E1A15] to-[#1A1410]">
+            {/* Decorative glow */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#FFD23F]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-[#FF4D5E]/10 blur-3xl" />
+
+            <div className="relative flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+              {/* Left: icon + copy */}
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFD23F] to-[#FF4D5E] shadow-[0_0_20px_rgba(255,210,63,0.35)]">
+                  <Crown className="h-6 w-6 text-black" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-white sm:text-lg">{t.unlockAccess}</p>
+                  <p className="mt-0.5 text-sm text-white/50">{t.unlockSubtitle}</p>
+
+                  {/* Feature chips */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {[t.unlockFeature1, t.unlockFeature2, t.unlockFeature3].map((f) => (
+                      <span
+                        key={f}
+                        className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/70"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#FFD23F]" />
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: CTA */}
+              <div className="flex shrink-0 items-center gap-3 lg:pl-4">
+                <button
+                  onClick={onOpenSubscription}
+                  className="flex items-center gap-2 rounded-full bg-[#FFD23F] px-5 py-2.5 text-sm font-bold text-black transition hover:bg-[#ffd94f] active:scale-95"
+                >
+                  <Crown className="h-4 w-4" /> {t.unlockCta}
+                </button>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-white">{t.unlockAccess}</p>
-              <p className="text-xs text-white/50">
-                {t.unlockSubtitle}
-              </p>
+
+            {/* Reassurance note: free browsing is never locked */}
+            <div className="relative flex items-center gap-2 border-t border-white/5 bg-black/20 px-5 py-2.5 sm:px-6">
+              <Clock className="h-3.5 w-3.5 shrink-0 text-white/30" />
+              <p className="text-xs text-white/40">{t.freeBrowseNote}</p>
             </div>
-            <span className="flex items-center gap-1 rounded-full bg-[#FFD23F] px-3 py-1.5 text-xs font-bold text-black">
-              <Crown className="h-3.5 w-3.5" /> {t.subscribe}
-            </span>
-          </button>
+          </div>
         </div>
       )}
 
@@ -303,7 +337,7 @@ export default function HomeScreen({ onSelectShow, onOpenProfile, onOpenSubscrip
             )}
           </section>
         ) : (
-          <>
+          <div className={hero && !query.trim() ? '' : subscribed ? 'pt-28' : 'pt-6'}>
             <RailRow
               icon={<TrendingUp className="h-5 w-5 text-[#FF4D5E]" />}
               title={t.trendingNow}
@@ -328,7 +362,7 @@ export default function HomeScreen({ onSelectShow, onOpenProfile, onOpenSubscrip
                 />
               );
             })}
-          </>
+          </div>
         )}
       </main>
 
