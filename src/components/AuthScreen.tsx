@@ -116,10 +116,10 @@ export default function AuthScreen({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 15% 0%, rgba(76,201,80,0.20) 0%, rgba(10,10,15,0) 50%), radial-gradient(circle at 85% 100%, rgba(76,201,80,0.10) 0%, rgba(10,10,15,0) 50%)',
+            'radial-gradient(circle at 12% -5%, rgba(255,170,60,0.22) 0%, rgba(10,10,15,0) 48%), radial-gradient(circle at 88% 105%, rgba(255,77,94,0.18) 0%, rgba(10,10,15,0) 52%)',
         }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0A0A0F]/50 via-[#0A0A0F]/75 to-[#0A0A0F]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0A0A0F]/55 via-[#0A0A0F]/80 to-[#0A0A0F]" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
         {/* Top bar */}
@@ -134,7 +134,7 @@ export default function AuthScreen({
             <img
               src="/assets/images/logo-transparent.png"
               alt="NINT ANIME"
-              className="h-8 w-8 drop-shadow-[0_0_14px_rgba(76,201,80,0.5)]"
+              className="h-8 w-8 drop-shadow-[0_0_14px_rgba(255,77,94,0.5)]"
             />
             <span
               className="text-lg font-black tracking-wider"
@@ -148,11 +148,18 @@ export default function AuthScreen({
 
         {/* Glowing poster strip */}
         {strip.length > 0 && (
-          <div className="flex justify-center gap-2 px-5 pt-2">
+          <div
+            className="flex justify-center gap-2 px-5 pt-2"
+            style={{
+              maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)',
+              WebkitMaskImage:
+                'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)',
+            }}
+          >
             {strip.map((show) => (
               <div
                 key={show.id}
-                className="relative aspect-[2/3] w-10 sm:w-12 flex-shrink-0 overflow-hidden rounded-md border border-white/10 opacity-80"
+                className="relative aspect-[2/3] w-10 sm:w-12 flex-shrink-0 overflow-hidden rounded-lg border border-white/10 opacity-90 shadow-[0_8px_20px_rgba(0,0,0,0.5)]"
               >
                 {show.poster_url ? (
                   <img src={show.poster_url} alt={show.title} className="h-full w-full object-cover" />
@@ -169,7 +176,10 @@ export default function AuthScreen({
         {/* Form card */}
         <div className="flex flex-1 items-center justify-center px-5 py-8">
           <div className="w-full max-w-md">
-            <div className="mb-6 text-center">
+            <div className="mb-7 text-center">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#FFD23F]/25 bg-[#FFD23F]/[0.08] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#FFD23F]">
+                <ShieldCheck className="h-3 w-3" /> Premium Access
+              </div>
               <h1
                 className={`text-4xl font-black tracking-tight ${isKm ? 'font-khmer' : ''}`}
                 style={{ fontFamily: '"Bebas Neue", "Battambang", Inter, sans-serif', letterSpacing: '0.03em' }}
@@ -181,91 +191,108 @@ export default function AuthScreen({
               </p>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm"
+            <div
+              className="rounded-[26px] p-[1px] shadow-[0_30px_70px_rgba(0,0,0,0.55)]"
+              style={{
+                background:
+                  'linear-gradient(160deg, rgba(255,210,120,0.35), rgba(255,255,255,0.06) 30%, rgba(255,77,94,0.18) 100%)',
+              }}
             >
-              {isSignUp && (
-                <Field
-                  icon={<User className="h-5 w-5" />}
-                  label={t.labelName}
-                  type="text"
-                  value={name}
-                  onChange={setName}
-                  placeholder={t.placeholderName}
-                  autoComplete="name"
+              <form
+                onSubmit={handleSubmit}
+                className="relative overflow-hidden rounded-[25px] border border-white/5 bg-[#111117]/90 p-6 backdrop-blur-xl"
+              >
+                {/* subtle top sheen */}
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-0 h-24"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0) 100%)',
+                  }}
                 />
-              )}
+                {isSignUp && (
+                  <Field
+                    icon={<User className="h-5 w-5" />}
+                    label={t.labelName}
+                    type="text"
+                    value={name}
+                    onChange={setName}
+                    placeholder={t.placeholderName}
+                    autoComplete="name"
+                  />
+                )}
 
-              <Field
-                icon={<Phone className="h-5 w-5" />}
-                label={t.labelPhone}
-                type="tel"
-                value={phone}
-                onChange={setPhone}
-                placeholder="e.g. +1 555 123 4567"
-                autoComplete="tel"
-              />
+                <Field
+                  icon={<Phone className="h-5 w-5" />}
+                  label={t.labelPhone}
+                  type="tel"
+                  value={phone}
+                  onChange={setPhone}
+                  placeholder="e.g. +1 555 123 4567"
+                  autoComplete="tel"
+                />
 
-              <Field
-                icon={<Lock className="h-5 w-5" />}
-                label={t.labelPassword}
-                type={showPw ? 'text' : 'password'}
-                value={password}
-                onChange={setPassword}
-                placeholder={t.placeholderPassword}
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                trailing={
-                  <button
-                    type="button"
-                    onClick={() => setShowPw((s) => !s)}
-                    className="text-white/40 transition hover:text-white/70"
-                    aria-label={showPw ? 'Hide password' : 'Show password'}
-                  >
-                    {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                }
-              />
-
-              {isSignUp && (
                 <Field
                   icon={<Lock className="h-5 w-5" />}
-                  label={t.labelConfirmPassword}
+                  label={t.labelPassword}
                   type={showPw ? 'text' : 'password'}
-                  value={confirm}
-                  onChange={setConfirm}
-                  placeholder={t.placeholderConfirmPassword}
-                  autoComplete="new-password"
+                  value={password}
+                  onChange={setPassword}
+                  placeholder={t.placeholderPassword}
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((s) => !s)}
+                      className="text-white/40 transition hover:text-white/70"
+                      aria-label={showPw ? 'Hide password' : 'Show password'}
+                    >
+                      {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  }
                 />
-              )}
 
-              {error && (
-                <div className="mt-4 rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/10 px-4 py-3 text-sm text-[#EF4444]">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4CC950] to-[#2E9E38] px-6 py-3.5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(76,201,80,0.35)] transition hover:shadow-[0_14px_40px_rgba(76,201,80,0.5)] active:scale-[0.98] disabled:opacity-60"
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <ShieldCheck className="h-5 w-5" />
-                    {isSignUp ? t.createAccount : t.signIn}
-                  </>
+                {isSignUp && (
+                  <Field
+                    icon={<Lock className="h-5 w-5" />}
+                    label={t.labelConfirmPassword}
+                    type={showPw ? 'text' : 'password'}
+                    value={confirm}
+                    onChange={setConfirm}
+                    placeholder={t.placeholderConfirmPassword}
+                    autoComplete="new-password"
+                  />
                 )}
-              </button>
-            </form>
+
+                {error && (
+                  <div className="mt-4 rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/10 px-4 py-3 text-sm text-[#EF4444]">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-black shadow-[0_10px_30px_rgba(255,170,60,0.3)] transition hover:shadow-[0_14px_40px_rgba(255,170,60,0.45)] active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #FFD23F, #FF9F3C)' }}
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <ShieldCheck className="h-5 w-5" />
+                      {isSignUp ? t.createAccount : t.signIn}
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
 
             <p className="mt-6 text-center text-sm text-white/50">
               {isSignUp ? t.haveAccount : t.noAccount}{' '}
               <button
                 onClick={() => onSwitch(isSignUp ? 'signin' : 'signup')}
-                className="font-semibold text-[#4CC950] transition hover:text-[#7CFC7C]"
+                className="font-semibold text-[#FFD23F] transition hover:text-[#FFE27A]"
               >
                 {isSignUp ? t.switchToSignIn : t.switchToSignUp}
               </button>
@@ -304,7 +331,7 @@ function Field({
         {label}
       </label>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+        <span className="pointer-events-none absolute left-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg bg-white/[0.05] text-white/45">
           {icon}
         </span>
         <input
@@ -313,7 +340,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-11 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#4CC950]/50 focus:bg-white/[0.07]"
+          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-12 pr-11 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#FFD23F]/50 focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(255,210,63,0.12)]"
         />
         {trailing && (
           <span className="absolute right-3.5 top-1/2 -translate-y-1/2">

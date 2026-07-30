@@ -13,6 +13,7 @@ import {
   Video,
   Clock,
   Pencil,
+  Link2,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { Show, Episode } from '@/lib/types';
@@ -36,6 +37,9 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const [addEpOpen, setAddEpOpen] = useState<string | null>(null);
   const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pasteUrlFor, setPasteUrlFor] = useState<string | null>(null);
+  const [pasteUrlValue, setPasteUrlValue] = useState('');
+  const [savingUrlFor, setSavingUrlFor] = useState<string | null>(null);
   const [newEp, setNewEp] = useState({
     episode_number: '',
     season: '1',
@@ -160,6 +164,30 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     setUploadProgress(100);
     setUploadingFor(null);
     setUploadProgress(0);
+    await loadShows();
+  };
+
+  const handleSaveVideoUrl = async (episodeId: string) => {
+    const url = pasteUrlValue.trim();
+    if (!url) return;
+
+    setSavingUrlFor(episodeId);
+    setError('');
+
+    const { error: updateErr } = await supabase
+      .from('episodes')
+      .update({ video_url: url })
+      .eq('id', episodeId);
+
+    if (updateErr) {
+      setError(updateErr.message);
+      setSavingUrlFor(null);
+      return;
+    }
+
+    setSavingUrlFor(null);
+    setPasteUrlFor(null);
+    setPasteUrlValue('');
     await loadShows();
   };
 
@@ -440,58 +468,107 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                           return (
                             <div
                               key={ep.id}
-                              className="flex items-center gap-3 rounded-xl border border-white/5 bg-[#1E1E2A] p-3"
+                              className="rounded-xl border border-white/5 bg-[#1E1E2A] p-3"
                             >
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-sm font-bold text-white/60">
-                                {ep.episode_number}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-white">
-                                  {ep.title}
-                                </p>
-                                <div className="mt-0.5 flex items-center gap-2 text-xs">
-                                  {hasVideo ? (
-                                    <span className="flex items-center gap-1 text-[#22C55E]">
-                                      <CheckCircle2 className="h-3 w-3" /> Video ready
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center gap-1 text-[#FFD23F]">
-                                      <Clock className="h-3 w-3" /> No video uploaded
-                                    </span>
-                                  )}
-                                  {ep.duration && (
-                                    <span className="text-white/40">
-                                      · {ep.duration} min
-                                    </span>
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-sm font-bold text-white/60">
+                                  {ep.episode_number}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-semibold text-white">
+                                    {ep.title}
+                                  </p>
+                                  <div className="mt-0.5 flex items-center gap-2 text-xs">
+                                    {hasVideo ? (
+                                      <span className="flex items-center gap-1 text-[#22C55E]">
+                                        <CheckCircle2 className="h-3 w-3" /> Video ready
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center gap-1 text-[#FFD23F]">
+                                        <Clock className="h-3 w-3" /> No video uploaded
+                                      </span>
+                                    )}
+                                    {ep.duration && (
+                                      <span className="text-white/40">
+                                        · {ep.duration} min
+                                      </span>
+                                    )}
+                                  </div>
+                                  {isUploading && (
+                                    <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
+                                      <div
+                                        className="h-full rounded-full bg-[#4CC950] transition-all"
+                                        style={{ width: `${uploadProgress}%` }}
+                                      />
+                                    </div>
                                   )}
                                 </div>
-                                {isUploading && (
-                                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
-                                    <div
-                                      className="h-full rounded-full bg-[#4CC950] transition-all"
-                                      style={{ width: `${uploadProgress}%` }}
-                                    />
-                                  </div>
-                                )}
+                                <button
+                                  onClick={() => triggerFileUpload(ep.id)}
+                                  disabled={isUploading}
+                                  className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
+                                >
+                                  {isUploading ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Upload className="h-3.5 w-3.5" />
+                                  )}
+                                  {hasVideo ? 'Replace' : 'Upload'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (pasteUrlFor === ep.id) {
+                                      setPasteUrlFor(null);
+                                      setPasteUrlValue('');
+                                    } else {
+                                      setPasteUrlFor(ep.id);
+                                      setPasteUrlValue(ep.video_url ?? '');
+                                    }
+                                  }}
+                                  className="flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-white/50 underline-offset-2 transition hover:text-white hover:underline"
+                                >
+                                  <Link2 className="h-3.5 w-3.5" /> Paste URL
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteEpisode(ep.id)}
+                                  className="rounded-lg p-2 text-white/40 transition hover:bg-[#EF4444]/10 hover:text-[#EF4444]"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
                               </div>
-                              <button
-                                onClick={() => triggerFileUpload(ep.id)}
-                                disabled={isUploading}
-                                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
-                              >
-                                {isUploading ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <Upload className="h-3.5 w-3.5" />
-                                )}
-                                {hasVideo ? 'Replace' : 'Upload'}
-                              </button>
-                              <button
-                                onClick={() => handleDeleteEpisode(ep.id)}
-                                className="rounded-lg p-2 text-white/40 transition hover:bg-[#EF4444]/10 hover:text-[#EF4444]"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+
+                              {pasteUrlFor === ep.id && (
+                                <div className="mt-2.5 flex items-center gap-2 border-t border-white/5 pt-2.5">
+                                  <input
+                                    type="text"
+                                    value={pasteUrlValue}
+                                    onChange={(e) => setPasteUrlValue(e.target.value)}
+                                    placeholder="https://.../episode.mp4 or .m3u8"
+                                    className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
+                                  />
+                                  <button
+                                    onClick={() => handleSaveVideoUrl(ep.id)}
+                                    disabled={savingUrlFor === ep.id || !pasteUrlValue.trim()}
+                                    className="flex shrink-0 items-center gap-1.5 rounded-lg bg-[#4CC950] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#2E9E38] disabled:opacity-50"
+                                  >
+                                    {savingUrlFor === ep.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                    )}
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setPasteUrlFor(null);
+                                      setPasteUrlValue('');
+                                    }}
+                                    className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/5"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           );
                         })}

@@ -455,7 +455,7 @@ function CoverflowHero({
   return (
     <section
       className="relative w-full overflow-hidden pt-[72px]"
-      style={{ height: 'min(62vh, 520px)' }}
+      style={{ height: 'min(52vh, 440px)' }}
       onTouchStart={(e) => onTouchStart(e.touches[0].clientX)}
       onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
     >
@@ -477,16 +477,16 @@ function CoverflowHero({
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255,170,60,0.18) 0%, rgba(10,10,15,0) 60%), radial-gradient(ellipse 60% 50% at 70% 80%, rgba(255,77,94,0.16) 0%, rgba(10,10,15,0) 55%)',
+              'radial-gradient(ellipse 85% 65% at 50% 22%, rgba(255,170,60,0.22) 0%, rgba(10,10,15,0) 62%), radial-gradient(ellipse 65% 55% at 72% 82%, rgba(255,77,94,0.20) 0%, rgba(10,10,15,0) 58%)',
           }}
         />
-        <div className="absolute inset-0 bg-[#0A0A0F]/45" />
+        <div className="absolute inset-0 bg-[#0A0A0F]/35" />
         {/* Fade the top into the header and the bottom into the page */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0) 18%, rgba(10,10,15,0) 70%, rgba(10,10,15,1) 100%)',
+              'linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(10,10,15,0) 20%, rgba(10,10,15,0) 68%, rgba(10,10,15,1) 100%)',
           }}
         />
       </div>
@@ -511,14 +511,20 @@ function CoverflowHero({
           onClick={() => onSelectShow(hero)}
           className="relative z-20 flex flex-col items-center"
           style={{
-            width: '50%',
-            maxWidth: 250,
+            width: '38%',
+            maxWidth: 190,
             transform: 'translateZ(0)',
           }}
         >
           <div
-            className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)] ring-1 ring-white/15 transition-transform duration-500"
+            className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl transition-transform duration-500"
+            style={{
+              boxShadow:
+                '0 30px 70px rgba(0,0,0,0.75), 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,210,120,0.25), 0 0 32px rgba(255,170,60,0.18)',
+            }}
           >
+            {/* subtle premium gold border */}
+            <div className="pointer-events-none absolute inset-0 z-10 rounded-2xl ring-1 ring-inset ring-white/20" />
             <img
               src={hero.poster_url ?? hero.banner_url ?? ''}
               alt={hero.title}
@@ -529,30 +535,36 @@ function CoverflowHero({
               className="absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(10,10,15,0) 45%, rgba(10,10,15,0.55) 72%, rgba(10,10,15,0.95) 100%)',
+                  'linear-gradient(180deg, rgba(10,10,15,0) 42%, rgba(10,10,15,0.6) 74%, rgba(10,10,15,0.96) 100%)',
               }}
             />
             {/* FEATURED pill */}
-            <span className="absolute left-3 top-3 rounded-md bg-[#FF4D5E] px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-lg">
+            <span
+              className="absolute left-2.5 top-2.5 rounded-md px-2 py-[3px] text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #FFD23F, #FFAA3C)' }}
+            >
               {t.featured}
             </span>
             {/* Title + rating */}
-            <div className="absolute inset-x-0 bottom-0 px-4 pb-4 text-center">
+            <div className="absolute inset-x-0 bottom-0 px-3 pb-3 text-center">
               <h2
-                className="truncate text-lg font-black leading-tight text-white sm:text-xl"
+                className="truncate text-base font-black leading-tight text-white sm:text-lg"
                 style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.02em' }}
               >
                 {hero.title.toUpperCase()}
               </h2>
-              <div className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-[#FFD23F]">
-                <Star className="h-3.5 w-3.5 fill-[#FFD23F]" /> {Number(hero.rating).toFixed(1)}
+              <div className="mt-0.5 flex items-center justify-center gap-1 text-xs font-semibold text-[#FFD23F]">
+                <Star className="h-3 w-3 fill-[#FFD23F]" /> {Number(hero.rating).toFixed(1)}
               </div>
             </div>
           </div>
 
           {/* Play button — featured card only */}
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-black shadow-lg transition active:scale-95">
-            <Play className="h-5 w-5 fill-black" /> {t.play}
+          <div
+            className="mt-3 flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-black shadow-lg transition active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #FFFFFF, #F1F1F1)' }}
+          >
+            <Play className="h-4 w-4 fill-black" /> {t.play}
           </div>
         </button>
 
@@ -600,18 +612,18 @@ interface SideCardProps {
 
 function SideCard({ show, offset, onClick }: SideCardProps) {
   const isNear = Math.abs(offset) === 1;
-  const translateX = offset * 72;
-  const scale = isNear ? 0.72 : 0.55;
+  const translateX = offset * 82;
+  const scale = isNear ? 0.62 : 0.46;
   const z = isNear ? 10 : 5;
-  const opacity = isNear ? 0.8 : 0.32;
+  const opacity = isNear ? 0.75 : 0.28;
 
   return (
     <button
       onClick={onClick}
       className="absolute z-10"
       style={{
-        width: '50%',
-        maxWidth: 250,
+        width: '38%',
+        maxWidth: 190,
         transform: `translateX(${translateX}%) scale(${scale})`,
         zIndex: z,
         opacity,
