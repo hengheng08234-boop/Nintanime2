@@ -77,6 +77,25 @@ export const appText = {
     videoMissingHint: 'The video file may be missing or corrupted. Try another episode.',
     goBack: 'Go Back',
     episodeLabel: 'Episode',
+
+    // Bottom navigation
+    navSearch: 'Search',
+    navWatchlist: 'My List',
+    navAccount: 'Account',
+
+    // Search overlay
+    searchTitle: 'Search',
+    searchHint: 'Find your next favorite anime',
+
+    // Watchlist screen
+    watchlistTitle: 'My List',
+    wantToWatch: 'Want to Watch',
+    continueWatching: 'Continue Watching',
+    watchlistEmpty: 'Nothing here yet. Tap a show to add it to your list.',
+    continueEmpty: 'Episodes you start watching will show up here.',
+    addedToList: 'Added to your list',
+    removeFromList: 'Remove from list',
+    resume: 'Resume',
   },
   km: {
     // Shared
@@ -156,5 +175,24 @@ export const appText = {
     videoMissingHint: 'ឯកសារវីដេអូអាចខ្វះ ឬខូច។ សូមសាកល្បងវគ្គផ្សេង។',
     goBack: 'ថយក្រោយ',
     episodeLabel: 'វគ្គ',
+
+    // Bottom navigation
+    navSearch: 'ស្វែងរក',
+    navWatchlist: 'បញ្ជីរបស់ខ្ញុំ',
+    navAccount: 'គណនី',
+
+    // Search overlay
+    searchTitle: 'ស្វែងរក',
+    searchHint: 'ស្វែងរកអានីមេដែរចូលចិត្តបន្ទាប់',
+
+    // Watchlist screen
+    watchlistTitle: 'បញ្ជីរបស់ខ្ញុំ',
+    wantToWatch: 'ចង់មើល',
+    continueWatching: 'បន្តមើល',
+    watchlistEmpty: 'មិនទាន់មានអ្វីទេ។ ចុចលើរឿងដើម្បីបន្ថែមទៅបញ្ជី។',
+    continueEmpty: 'ភាគដែរអ្នកចាក់នឹងបង្ហាញនៅទីនេះ។',
+    addedToList: 'បានបន្ថែមទៅបញ្ជី',
+    removeFromList: 'យកចេញពីបញ្ជី',
+    resume: 'បន្ត',
   },
 } as const;
