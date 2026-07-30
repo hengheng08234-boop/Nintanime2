@@ -100,7 +100,7 @@ export default function ShowDetailScreen({
           <div className="flex-1">
             <h1
               className="text-4xl font-black leading-tight sm:text-5xl"
-              style={{ fontFamily: '"Bebas Neue", Inter, sans-serif', letterSpacing: '0.02em' }}
+              style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.02em' }}
             >
               {show.title.toUpperCase()}
             </h1>

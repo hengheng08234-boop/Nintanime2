@@ -159,7 +159,7 @@ export default function ProfileScreen({
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF4D5E] to-[#E63946]">
                     <span
                       className="text-5xl font-black text-white"
-                      style={{ fontFamily: '"Bebas Neue", Inter, sans-serif' }}
+                      style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif' }}
                     >
                       {(profile?.display_name || 'A').charAt(0).toUpperCase()}
                     </span>

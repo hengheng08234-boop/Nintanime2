@@ -9,7 +9,6 @@ import {
   TrendingUp,
   User,
   Crown,
-  Clock,
   Home as HomeIcon,
   Bookmark,
   X,
@@ -185,7 +184,7 @@ export default function HomeScreen({
             <div className="flex flex-col leading-none">
               <span
                 className="text-lg font-black tracking-wider text-white"
-                style={{ fontFamily: '"Bebas Neue", Inter, sans-serif' }}
+                style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif' }}
               >
                 NINT ANIME
               </span>
@@ -263,57 +262,6 @@ export default function HomeScreen({
         />
       )}
 
-      {/* Subscription / VIP promo card */}
-      {!subscribed && (
-        <div
-          className={`mx-auto max-w-[1400px] px-4 sm:px-8 ${
-            heroVisible ? 'pt-6' : 'pt-28'
-          }`}
-        >
-          <div className="relative overflow-hidden rounded-2xl border border-[#FFD23F]/25 bg-gradient-to-br from-[#1A1410] via-[#1E1A15] to-[#1A1410]">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#FFD23F]/10 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-[#FF4D5E]/10 blur-3xl" />
-
-            <div className="relative flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFD23F] to-[#FF4D5E] shadow-[0_0_20px_rgba(255,210,63,0.35)]">
-                  <Crown className="h-6 w-6 text-black" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-white sm:text-lg">{t.unlockAccess}</p>
-                  <p className="mt-0.5 text-sm text-white/50">{t.unlockSubtitle}</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {[t.unlockFeature1, t.unlockFeature2, t.unlockFeature3].map((f) => (
-                      <span
-                        key={f}
-                        className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/70"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#FFD23F]" />
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex shrink-0 items-center gap-3 lg:pl-4">
-                <button
-                  onClick={onOpenSubscription}
-                  className="flex items-center gap-2 rounded-full bg-[#FFD23F] px-5 py-2.5 text-sm font-bold text-black transition hover:bg-[#ffd94f] active:scale-95"
-                >
-                  <Crown className="h-4 w-4" /> {t.unlockCta}
-                </button>
-              </div>
-            </div>
-
-            <div className="relative flex items-center gap-2 border-t border-white/5 bg-black/20 px-5 py-2.5 sm:px-6">
-              <Clock className="h-3.5 w-3.5 shrink-0 text-white/30" />
-              <p className="text-xs text-white/40">{t.freeBrowseNote}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Content rows */}
       <main className="mx-auto max-w-[1400px] px-4 pb-28 sm:px-8 sm:pb-20">
         {query.trim() ? (
@@ -333,7 +281,7 @@ export default function HomeScreen({
             )}
           </section>
         ) : (
-          <div className={heroVisible ? '' : subscribed ? 'pt-28' : 'pt-6'}>
+          <div className={heroVisible ? 'pt-2' : 'pt-28'}>
             <RailRow
               icon={<TrendingUp className="h-5 w-5 text-[#FF4D5E]" />}
               title={t.trendingNow}
@@ -563,8 +511,8 @@ function CoverflowHero({
           onClick={() => onSelectShow(hero)}
           className="relative z-20 flex flex-col items-center"
           style={{
-            width: '62%',
-            maxWidth: 300,
+            width: '50%',
+            maxWidth: 250,
             transform: 'translateZ(0)',
           }}
         >
@@ -592,7 +540,7 @@ function CoverflowHero({
             <div className="absolute inset-x-0 bottom-0 px-4 pb-4 text-center">
               <h2
                 className="truncate text-lg font-black leading-tight text-white sm:text-xl"
-                style={{ fontFamily: '"Bebas Neue", Inter, sans-serif', letterSpacing: '0.02em' }}
+                style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.02em' }}
               >
                 {hero.title.toUpperCase()}
               </h2>
@@ -652,19 +600,18 @@ interface SideCardProps {
 
 function SideCard({ show, offset, onClick }: SideCardProps) {
   const isNear = Math.abs(offset) === 1;
-  // Offsets -1/+1 sit close to center and peek past the edges; -2/+2 recede further.
-  const translateX = offset * 58; // percent of the center card width
-  const scale = isNear ? 0.78 : 0.6;
+  const translateX = offset * 72;
+  const scale = isNear ? 0.72 : 0.55;
   const z = isNear ? 10 : 5;
-  const opacity = isNear ? 0.85 : 0.4;
+  const opacity = isNear ? 0.8 : 0.32;
 
   return (
     <button
       onClick={onClick}
       className="absolute z-10"
       style={{
-        width: '62%',
-        maxWidth: 300,
+        width: '50%',
+        maxWidth: 250,
         transform: `translateX(${translateX}%) scale(${scale})`,
         zIndex: z,
         opacity,

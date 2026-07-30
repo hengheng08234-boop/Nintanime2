@@ -24,7 +24,7 @@ export const theme = {
     glow: 'radial-gradient(circle at 50% 0%, rgba(255,77,94,0.18) 0%, rgba(10,10,15,0) 60%)',
   },
   fonts: {
-    display: '"Bebas Neue", "Inter", system-ui, sans-serif',
+    display: '"Bebas Neue", "Battambang", "Inter", system-ui, sans-serif',
     body: '"Inter", system-ui, -apple-system, sans-serif',
   },
   radius: {

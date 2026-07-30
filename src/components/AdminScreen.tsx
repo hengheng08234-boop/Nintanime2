@@ -12,6 +12,7 @@ import {
   Search,
   Video,
   Clock,
+  Pencil,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { Show, Episode } from '@/lib/types';
@@ -57,6 +58,14 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [creatingShow, setCreatingShow] = useState(false);
+
+  // Edit existing show
+  const [editShow, setEditShow] = useState<ShowWithEpisodes | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editPosterFile, setEditPosterFile] = useState<File | null>(null);
+  const [editBannerFile, setEditBannerFile] = useState<File | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
 
   const loadShows = async () => {
     setLoading(true);
@@ -260,6 +269,61 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     await loadShows();
   };
 
+  const openEdit = (show: ShowWithEpisodes) => {
+    setEditShow(show);
+    setEditTitle(show.title);
+    setEditPosterFile(null);
+    setEditBannerFile(null);
+    setEditSuccess(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editShow) return;
+    if (!editTitle.trim()) {
+      setError('Title is required');
+      return;
+    }
+    setSavingEdit(true);
+    setError('');
+
+    const updates: Record<string, string | null> = { title: editTitle.trim() };
+
+    if (editPosterFile) {
+      const url = await uploadImage('posters', editPosterFile, `poster-${editShow.id}`);
+      if (!url) {
+        setSavingEdit(false);
+        return;
+      }
+      updates.poster_url = url;
+    }
+    if (editBannerFile) {
+      const url = await uploadImage('posters', editBannerFile, `banner-${editShow.id}`);
+      if (!url) {
+        setSavingEdit(false);
+        return;
+      }
+      updates.banner_url = url;
+    }
+
+    const { error: updErr } = await supabase
+      .from('shows')
+      .update(updates)
+      .eq('id', editShow.id);
+
+    setSavingEdit(false);
+    if (updErr) {
+      setError(updErr.message);
+      return;
+    }
+
+    setEditSuccess(true);
+    setTimeout(() => {
+      setEditShow(null);
+      setEditSuccess(false);
+    }, 1200);
+    await loadShows();
+  };
+
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
       {/* Header */}
@@ -350,9 +414,20 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                         </span>
                       </div>
                     </div>
-                    <span className="text-xs text-white/40">
-                      {isExpanded ? 'Collapse' : 'Expand'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(show);
+                        }}
+                        className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                      <span className="text-xs text-white/40">
+                        {isExpanded ? 'Collapse' : 'Expand'}
+                      </span>
+                    </div>
                   </button>
 
                   {/* Episodes */}
@@ -698,6 +773,106 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
               <p className="text-[11px] text-white/40">
                 After creating, expand the show below to upload its episode(s)/video file.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Show modal */}
+      {editShow && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#14141C] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-bold text-white">Edit Show</h2>
+              <button
+                onClick={() => setEditShow(null)}
+                className="rounded-lg p-1.5 text-white/50 hover:bg-white/5"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-white/60">Title *</label>
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Show or movie title"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none"
+                />
+              </div>
+
+              {/* Current images preview */}
+              <div className="flex gap-3">
+                {editShow.poster_url && (
+                  <div className="flex-1">
+                    <label className="mb-1 block text-[11px] font-semibold text-white/60">Current poster</label>
+                    <img
+                      src={editShow.poster_url}
+                      alt="Poster"
+                      className="h-24 w-16 rounded-lg object-cover ring-1 ring-white/10"
+                    />
+                  </div>
+                )}
+                {editShow.banner_url && (
+                  <div className="flex-1">
+                    <label className="mb-1 block text-[11px] font-semibold text-white/60">Current banner</label>
+                    <img
+                      src={editShow.banner_url}
+                      alt="Banner"
+                      className="h-24 w-40 rounded-lg object-cover ring-1 ring-white/10"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-white/60">
+                  Replace poster (vertical card image)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditPosterFile(e.target.files?.[0] ?? null)}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/70 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-2.5 file:py-1 file:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-white/60">
+                  Replace banner (wide hero image)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditBannerFile(e.target.files?.[0] ?? null)}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/70 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-2.5 file:py-1 file:text-white"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={savingEdit}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#4CC950] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#2E9E38] disabled:opacity-50"
+                >
+                  {editSuccess ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : savingEdit ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                  {editSuccess ? 'Saved!' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => setEditShow(null)}
+                  className="rounded-lg border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
