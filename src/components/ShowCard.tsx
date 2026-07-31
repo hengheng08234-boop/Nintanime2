@@ -39,8 +39,8 @@ export default function ShowCard({ show, onClick }: ShowCardProps) {
           }}
         />
         {/* Rating badge */}
-        <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[11px] font-semibold text-[#FFD23F] backdrop-blur-sm">
-          <Star className="h-3 w-3 fill-[#FFD23F] text-[#FFD23F]" />
+        <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[11px] font-semibold text-[#E8A94A] backdrop-blur-sm">
+          <Star className="h-3 w-3 fill-[#E8A94A] text-[#E8A94A]" />
           {Number(show.rating).toFixed(1)}
         </div>
         {/* Hover play overlay */}

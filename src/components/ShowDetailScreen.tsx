@@ -117,8 +117,8 @@ export default function ShowDetailScreen({
 
             {/* Meta row */}
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-              <span className="flex items-center gap-1 font-semibold text-[#FFD23F]">
-                <Star className="h-4 w-4 fill-[#FFD23F]" /> {Number(show.rating).toFixed(1)}
+              <span className="flex items-center gap-1 font-semibold text-[#E8A94A]">
+                <Star className="h-4 w-4 fill-[#E8A94A]" /> {Number(show.rating).toFixed(1)}
               </span>
               {!!show.view_count && (
                 <>
@@ -216,7 +216,7 @@ export default function ShowDetailScreen({
                     onClick={() => detail && onPlayEpisode(ep, detail)}
                     className={`group flex w-full items-center gap-4 overflow-hidden rounded-xl border p-3 text-left transition ${
                       locked
-                        ? 'border-[#FFD23F]/25 bg-[#1A1710] hover:border-[#FFD23F]/60 hover:shadow-[0_0_24px_rgba(255,210,63,0.18)]'
+                        ? 'border-[#E8A94A]/25 bg-[#1A1710] hover:border-[#E8A94A]/60 hover:shadow-[0_0_24px_rgba(232,169,74,0.18)]'
                         : 'border-white/5 bg-[#14141C] hover:border-[#FF4D5E]/30 hover:bg-[#1E1E2A]'
                     }`}
                   >
@@ -234,13 +234,13 @@ export default function ShowDetailScreen({
                           <div
                             className="flex h-10 w-10 items-center justify-center rounded-full transition group-hover:scale-110"
                             style={{
-                              background: 'linear-gradient(145deg, #FFE27A 0%, #FFD23F 45%, #E8A917 100%)',
-                              boxShadow: '0 0 18px rgba(255,210,63,0.55)',
+                              background: 'linear-gradient(145deg, #F3CD82 0%, #E8A94A 45%, #A85D1F 100%)',
+                              boxShadow: '0 0 18px rgba(232,169,74,0.55)',
                             }}
                           >
                             <Lock className="h-4 w-4 text-[#3A2A00]" strokeWidth={2.5} />
                           </div>
-                          <span className="rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#FFD23F]">
+                          <span className="rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#E8A94A]">
                             {t.lockedVip}
                           </span>
                         </div>
@@ -270,7 +270,7 @@ export default function ShowDetailScreen({
                         {locked && (
                           <span
                             className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#3A2A00]"
-                            style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
+                            style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
                           >
                             <Lock className="h-2.5 w-2.5" /> {t.lockedVip}
                           </span>

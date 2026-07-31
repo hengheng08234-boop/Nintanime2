@@ -218,7 +218,7 @@ export default function HomeScreen({
             {/* Subscribe button — visible on all screens */}
             <button
               onClick={onOpenSubscription}
-              className="flex items-center gap-1.5 rounded-full border border-[#FFD23F]/30 bg-[#FFD23F]/10 px-3 py-1.5 text-xs font-bold text-[#FFD23F] transition hover:bg-[#FFD23F]/20"
+              className="flex items-center gap-1.5 rounded-full border border-[#E8A94A]/30 bg-[#E8A94A]/10 px-3 py-1.5 text-xs font-bold text-[#E8A94A] transition hover:bg-[#E8A94A]/20"
             >
               <Crown className="h-3.5 w-3.5" />
               <span>{subscribed ? t.premium : t.subscribe}</span>
@@ -226,7 +226,7 @@ export default function HomeScreen({
             {/* Profile avatar — desktop only, mobile uses bottom nav */}
             <button
               onClick={onOpenProfile}
-              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF4D5E] to-[#FFD23F] ring-2 ring-white/10 transition hover:ring-[#FF4D5E]/50 sm:flex"
+              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF4D5E] to-[#E8A94A] ring-2 ring-white/10 transition hover:ring-[#FF4D5E]/50 sm:flex"
               aria-label="Open profile"
             >
               {avatarUrl ? (
@@ -289,7 +289,7 @@ export default function HomeScreen({
               onSelectShow={onSelectShow}
             />
             <RailRow
-              icon={<Flame className="h-5 w-5 text-[#FFD23F]" />}
+              icon={<Flame className="h-5 w-5 text-[#E8A94A]" />}
               title={t.popularSeason}
               shows={shows.slice(0, 10)}
               onSelectShow={onSelectShow}
@@ -454,8 +454,8 @@ function CoverflowHero({
 
   return (
     <section
-      className="relative w-full overflow-hidden pt-[76px]"
-      style={{ height: 'min(60vh, 500px)' }}
+      className="relative w-full overflow-hidden pt-[72px]"
+      style={{ height: 'min(52vh, 440px)' }}
       onTouchStart={(e) => onTouchStart(e.touches[0].clientX)}
       onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
     >
@@ -477,7 +477,7 @@ function CoverflowHero({
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 85% 65% at 50% 22%, rgba(255,170,60,0.22) 0%, rgba(10,10,15,0) 62%), radial-gradient(ellipse 65% 55% at 72% 82%, rgba(255,77,94,0.20) 0%, rgba(10,10,15,0) 58%)',
+              'radial-gradient(ellipse 85% 65% at 50% 22%, rgba(201,122,46,0.22) 0%, rgba(10,10,15,0) 62%), radial-gradient(ellipse 65% 55% at 72% 82%, rgba(255,77,94,0.20) 0%, rgba(10,10,15,0) 58%)',
           }}
         />
         <div className="absolute inset-0 bg-[#0A0A0F]/35" />
@@ -492,11 +492,7 @@ function CoverflowHero({
       </div>
 
       {/* Cards deck */}
-      <div className="relative mx-auto flex h-full max-w-[1400px] items-center justify-center px-4 sm:px-8">
-        {/* Edge vignettes — let the side cards fade into the backdrop instead of clipping hard */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 bg-gradient-to-r from-[#0A0A0F] via-[#0A0A0F]/70 to-transparent sm:w-32" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l from-[#0A0A0F] via-[#0A0A0F]/70 to-transparent sm:w-32" />
-
+      <div className="relative flex h-full items-center justify-center">
         {shows.length > 1 &&
           [-2, -1, 1, 2].map((offset) => {
             const i = (shows.length + index + offset) % shows.length;
@@ -515,8 +511,8 @@ function CoverflowHero({
           onClick={() => onSelectShow(hero)}
           className="relative z-20 flex flex-col items-center"
           style={{
-            width: '40%',
-            maxWidth: 212,
+            width: '38%',
+            maxWidth: 190,
             transform: 'translateZ(0)',
           }}
         >
@@ -524,7 +520,7 @@ function CoverflowHero({
             className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl transition-transform duration-500"
             style={{
               boxShadow:
-                '0 30px 70px rgba(0,0,0,0.75), 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,210,120,0.25), 0 0 32px rgba(255,170,60,0.18)',
+                '0 30px 70px rgba(0,0,0,0.75), 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,210,120,0.25), 0 0 32px rgba(201,122,46,0.18)',
             }}
           >
             {/* subtle premium gold border */}
@@ -545,7 +541,7 @@ function CoverflowHero({
             {/* FEATURED pill */}
             <span
               className="absolute left-2.5 top-2.5 rounded-md px-2 py-[3px] text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #FFD23F, #FFAA3C)' }}
+              style={{ background: 'linear-gradient(135deg, #E8A94A, #FFAA3C)' }}
             >
               {t.featured}
             </span>
@@ -557,8 +553,8 @@ function CoverflowHero({
               >
                 {hero.title.toUpperCase()}
               </h2>
-              <div className="mt-0.5 flex items-center justify-center gap-1 text-xs font-semibold text-[#FFD23F]">
-                <Star className="h-3 w-3 fill-[#FFD23F]" /> {Number(hero.rating).toFixed(1)}
+              <div className="mt-0.5 flex items-center justify-center gap-1 text-xs font-semibold text-[#E8A94A]">
+                <Star className="h-3 w-3 fill-[#E8A94A]" /> {Number(hero.rating).toFixed(1)}
               </div>
             </div>
           </div>
@@ -616,18 +612,18 @@ interface SideCardProps {
 
 function SideCard({ show, offset, onClick }: SideCardProps) {
   const isNear = Math.abs(offset) === 1;
-  const translateX = offset * 76;
-  const scale = isNear ? 0.7 : 0.54;
+  const translateX = offset * 82;
+  const scale = isNear ? 0.62 : 0.46;
   const z = isNear ? 10 : 5;
-  const opacity = isNear ? 0.85 : 0.4;
+  const opacity = isNear ? 0.75 : 0.28;
 
   return (
     <button
       onClick={onClick}
       className="absolute z-10"
       style={{
-        width: '40%',
-        maxWidth: 212,
+        width: '38%',
+        maxWidth: 190,
         transform: `translateX(${translateX}%) scale(${scale})`,
         zIndex: z,
         opacity,
@@ -652,8 +648,8 @@ function SideCard({ show, offset, onClick }: SideCardProps) {
         />
         <div className="absolute inset-x-0 bottom-0 px-3 pb-3 text-center">
           <p className="truncate text-sm font-bold text-white">{show.title}</p>
-          <div className="mt-0.5 flex items-center justify-center gap-1 text-xs font-semibold text-[#FFD23F]">
-            <Star className="h-3 w-3 fill-[#FFD23F]" /> {Number(show.rating).toFixed(1)}
+          <div className="mt-0.5 flex items-center justify-center gap-1 text-xs font-semibold text-[#E8A94A]">
+            <Star className="h-3 w-3 fill-[#E8A94A]" /> {Number(show.rating).toFixed(1)}
           </div>
         </div>
       </div>

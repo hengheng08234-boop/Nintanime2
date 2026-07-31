@@ -546,7 +546,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                         <CheckCircle2 className="h-3 w-3" /> Video ready
                                       </span>
                                     ) : (
-                                      <span className="flex items-center gap-1 text-[#FFD23F]">
+                                      <span className="flex items-center gap-1 text-[#E8A94A]">
                                         <Clock className="h-3 w-3" /> No video uploaded
                                       </span>
                                     )}

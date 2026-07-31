@@ -45,8 +45,8 @@ const PLANS: {
 
 const PLAN_QR: Record<PlanKey, string> = {
   '1m': '/assets/images/subscription-1m.png',
-  '2m': '/assets/images/subscription-1m.png',
-  '6m': '/assets/images/subscription-1m.png',
+  '2m': '/assets/images/subscription-2m.png',
+  '6m': '/assets/images/subscription-6m.png',
   '1y': '/assets/images/subscription-1y.png',
 };
 
@@ -237,10 +237,10 @@ export default function SubscriptionModal({ onClose }: Props) {
       <div
         className="relative w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-[28px] text-white shadow-2xl"
         style={{
-          background: '#0F0F1A',
-          border: '1px solid rgba(245,168,184,0.22)',
+          background: '#101018',
+          border: '1px solid rgba(232,169,74,0.18)',
           boxShadow:
-            '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04), 0 0 70px rgba(147,97,255,0.10)',
+            '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), 0 0 60px rgba(255,77,94,0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -249,11 +249,11 @@ export default function SubscriptionModal({ onClose }: Props) {
           className="relative overflow-hidden px-5 pb-6 pt-5"
           style={{
             background:
-              'radial-gradient(130% 150% at 50% -15%, #3B2E6B 0%, #201A38 48%, #0C0C16 100%)',
+              'radial-gradient(120% 140% at 50% -20%, #262035 0%, #171626 45%, #0d0d16 100%)',
           }}
         >
-          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#F5A8B8]/14 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#9361FF]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#E8A94A]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#FF4D5E]/15 blur-3xl" />
           <button
             onClick={onClose}
             className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
@@ -264,8 +264,8 @@ export default function SubscriptionModal({ onClose }: Props) {
             <div
               className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl p-2.5"
               style={{
-                background: 'linear-gradient(145deg, #FFD9C2 0%, #F5A8B8 45%, #C96580 100%)',
-                boxShadow: '0 8px 28px rgba(245,168,184,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset',
+                background: 'linear-gradient(145deg, #F3CD82 0%, #E8A94A 45%, #A85D1F 100%)',
+                boxShadow: '0 8px 28px rgba(232,169,74,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset',
               }}
             >
               <img
@@ -282,11 +282,11 @@ export default function SubscriptionModal({ onClose }: Props) {
               className="flex items-center gap-1.5 text-lg font-extrabold tracking-wide"
               style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.03em' }}
             >
-              <Crown size={17} className="text-[#F5A8B8]" fill="#F5A8B8" strokeWidth={0} />
+              <Crown size={17} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
               {t.subGoPremium}
             </p>
             <div className="mt-1.5 flex items-center gap-1.5">
-              <Sparkles size={12} className="text-[#F5A8B8]" />
+              <Sparkles size={12} className="text-[#E8A94A]" />
               <p className="text-[11px] text-white/55">{t.subTagline}</p>
             </div>
           </div>
@@ -309,14 +309,14 @@ export default function SubscriptionModal({ onClose }: Props) {
                       className="relative rounded-2xl p-3 text-center transition-all duration-200"
                       style={{
                         border: isSelected
-                          ? '1.5px solid #F5A8B8'
+                          ? '1.5px solid #E8A94A'
                           : '1.5px solid rgba(255,255,255,0.08)',
                         background: isSelected
-                          ? 'linear-gradient(160deg, rgba(245,168,184,0.14) 0%, rgba(255,77,94,0.08) 100%)'
+                          ? 'linear-gradient(160deg, rgba(232,169,74,0.14) 0%, rgba(255,77,94,0.08) 100%)'
                           : 'rgba(255,255,255,0.02)',
                         transform: isSelected ? 'translateY(-2px)' : 'none',
                         boxShadow: isSelected
-                          ? '0 8px 20px rgba(245,168,184,0.15)'
+                          ? '0 8px 20px rgba(232,169,74,0.15)'
                           : 'none',
                       }}
                     >
@@ -324,7 +324,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         <span
                           className="absolute -top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-black"
                           style={{
-                            background: 'linear-gradient(90deg, #F5A8B8, #E17B94)',
+                            background: 'linear-gradient(90deg, #E8A94A, #C97A2E)',
                           }}
                         >
                           <Sparkles size={7} />
@@ -336,7 +336,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       </p>
                       <p
                         className="mt-0.5 text-xl font-extrabold"
-                        style={{ color: isSelected ? '#F5A8B8' : '#FF4D5E' }}
+                        style={{ color: isSelected ? '#E8A94A' : '#FF4D5E' }}
                       >
                         ${p.price}
                       </p>
@@ -376,21 +376,15 @@ export default function SubscriptionModal({ onClose }: Props) {
               </div>
 
               {/* Payment mode tabs */}
-              <div
-                className="mb-3 flex gap-1.5 rounded-xl p-1"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }}
-              >
+              <div className="mb-3 flex gap-1.5 rounded-xl bg-white/[0.04] p-1">
                 <button
                   onClick={() => setPayMode('auto')}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
-                    payMode === 'auto' ? 'text-black' : 'text-white/55'
+                    payMode === 'auto' ? 'text-black' : 'text-white/50'
                   }`}
                   style={
                     payMode === 'auto'
-                      ? {
-                          background: 'linear-gradient(90deg,#F5A8B8,#E17B94)',
-                          boxShadow: '0 4px 14px rgba(255,176,32,0.3)',
-                        }
+                      ? { background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }
                       : undefined
                   }
                 >
@@ -400,16 +394,10 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <button
                   onClick={() => setPayMode('manual')}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
-                    payMode === 'manual' ? 'text-white' : 'text-white/55'
-                  }`}
-                  style={
                     payMode === 'manual'
-                      ? {
-                          background: 'linear-gradient(90deg,#FF6B7A,#E63946)',
-                          boxShadow: '0 4px 14px rgba(230,57,70,0.3)',
-                        }
-                      : undefined
-                  }
+                      ? 'bg-[#FF4D5E] text-white'
+                      : 'text-white/50'
+                  }`}
                 >
                   <QrCode size={13} />
                   {t.subManual}
@@ -421,16 +409,16 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div
                   className="mb-3 rounded-2xl p-4"
                   style={{
-                    border: '1px solid rgba(245,168,184,0.22)',
+                    border: '1px solid rgba(232,169,74,0.15)',
                     background:
-                      'linear-gradient(160deg, rgba(245,168,184,0.07) 0%, rgba(147,97,255,0.04) 55%, rgba(255,255,255,0.02) 100%)',
+                      'linear-gradient(160deg, rgba(232,169,74,0.05) 0%, rgba(255,255,255,0.02) 100%)',
                   }}
                 >
-                  <div className="mb-3 flex items-center justify-center gap-1.5 rounded-full py-1">
+                  <div className="mb-3 flex items-center justify-center gap-1.5">
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#22C55E]/15">
                       <ShieldCheck size={13} className="text-[#22C55E]" />
                     </div>
-                    <p className="text-[11px] font-bold tracking-wide text-white">
+                    <p className="text-[11px] font-bold text-white">
                       {t.subPayWithKhqr}
                     </p>
                   </div>
@@ -443,7 +431,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleGenerateAutoQr}
                         className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-black transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
+                        style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
                       >
                         <Zap size={14} />
                         {t.subGenerateQr}
@@ -466,7 +454,7 @@ export default function SubscriptionModal({ onClose }: Props) {
 
                   {autoStatus === 'loading' && (
                     <div className="mx-auto flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10">
-                      <Loader2 size={28} className="animate-spin text-[#F5A8B8]" />
+                      <Loader2 size={28} className="animate-spin text-[#E8A94A]" />
                       <p className="text-[10px] text-white/50">{t.subGeneratingQr}</p>
                     </div>
                   )}
@@ -474,72 +462,49 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {autoStatus === 'waiting' && autoQr && (
                     <>
                       <div className="mb-3 flex justify-center">
-                        <div className="relative rounded-[22px] bg-white p-3 shadow-[0_10px_30px_rgba(245,168,184,0.18)]">
+                        <div className="relative">
                           <img
                             src={autoQr.qrImage}
                             alt="Payment QR"
-                            className="h-40 w-40 rounded-lg object-contain"
+                            className="h-44 w-44 rounded-2xl border-2 border-[#E8A94A]/40 bg-white p-2 object-contain"
                           />
-                          {/* Scanner-style corner brackets, gold accent */}
-                          {[
-                            'left-1 top-1 border-l-2 border-t-2 rounded-tl-lg',
-                            'right-1 top-1 border-r-2 border-t-2 rounded-tr-lg',
-                            'left-1 bottom-1 border-l-2 border-b-2 rounded-bl-lg',
-                            'right-1 bottom-1 border-r-2 border-b-2 rounded-br-lg',
-                          ].map((pos, i) => (
-                            <span
-                              key={i}
-                              className={`pointer-events-none absolute h-4 w-4 border-[#E17B94] ${pos}`}
-                            />
-                          ))}
+                          <div className="absolute -inset-1 animate-pulse rounded-2xl border-2 border-[#E8A94A]/30" />
                         </div>
                       </div>
-                      <div className="mb-3 flex items-center justify-center">
-                        <div
-                          className="flex items-center gap-1.5 rounded-full px-3 py-1"
-                          style={{ background: 'rgba(245,168,184,0.12)', border: '1px solid rgba(245,168,184,0.25)' }}
-                        >
-                          <Loader2 size={12} className="animate-spin text-[#F5A8B8]" />
-                          <p className="text-[10px] font-semibold text-[#F5A8B8]">
-                            {t.subAutoVerifying}
-                          </p>
-                          <span className="rounded-full bg-[#F5A8B8]/20 px-1.5 py-[1px] font-mono text-[10px] font-bold text-white">
-                            {formatCountdown(secondsLeft)}
-                          </span>
-                        </div>
+                      <div className="mb-3 flex items-center justify-center gap-1.5">
+                        <Loader2 size={12} className="animate-spin text-[#E8A94A]" />
+                        <p className="text-[10px] font-semibold text-white">
+                          {t.subAutoVerifying} ({formatCountdown(secondsLeft)})
+                        </p>
                       </div>
 
                       {/* Prominent ABA Mobile deep link */}
                       {autoQr.abapayDeeplink && (
                         <a
                           href={autoQr.abapayDeeplink}
-                          className="mb-2 flex w-full items-center gap-3 rounded-xl p-2.5 transition hover:opacity-90"
+                          className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 transition hover:opacity-90"
                           style={{
-                            background: 'linear-gradient(135deg, #17B39E 0%, #0E7A6B 100%)',
-                            boxShadow: '0 8px 20px rgba(20,150,130,0.3)',
+                            background: 'linear-gradient(135deg, #14707F 0%, #0C5261 100%)',
+                            boxShadow: '0 6px 18px rgba(15,95,123,0.35)',
                           }}
                         >
-                          <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-white/95">
-                            <img
-                              src={ABA_ICON}
-                              alt="ABA Mobile"
-                              className="h-7 w-7 rounded-[6px] object-cover"
-                            />
-                          </span>
+                          <img
+                            src={ABA_ICON}
+                            alt="ABA Mobile"
+                            className="h-9 w-9 rounded-[9px] object-cover"
+                          />
                           <span className="flex-1 text-left">
-                            <span className="block text-[12.5px] font-bold text-white">
+                            <span className="block text-[12px] font-bold text-white">
                               {t.subOpenAba}
                             </span>
-                            <span className="block text-[9.5px] text-white/80">
+                            <span className="block text-[9.5px] text-white/70">
                               {t.subPayOneTap}
                             </span>
                           </span>
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15">
-                            <ArrowRight size={14} className="text-white" />
-                          </span>
+                          <ArrowRight size={16} className="text-white/80" />
                         </a>
                       )}
-                      <p className="text-center text-[9.5px] text-white/40">
+                      <p className="text-center text-[9.5px] text-white/35">
                         {t.subAlreadyPaidHint}
                       </p>
                     </>
@@ -553,7 +518,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleGenerateAutoQr}
                         className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
+                        style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
                       >
                         <RefreshCw size={13} />
                         {t.subGenerateNewQr}
@@ -567,7 +532,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleGenerateAutoQr}
                         className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
+                        style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
                       >
                         <RefreshCw size={13} />
                         {t.subTryAgain}
@@ -579,40 +544,18 @@ export default function SubscriptionModal({ onClose }: Props) {
 
               {/* MANUAL PAY */}
               {payMode === 'manual' && (
-                <div
-                  className="mb-3 rounded-2xl p-4"
-                  style={{
-                    border: '1px solid rgba(255,107,122,0.22)',
-                    background:
-                      'linear-gradient(160deg, rgba(255,77,94,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-                  }}
-                >
+                <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                   <div className="mb-3 flex items-center justify-center gap-1.5">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF4D5E]/15">
-                      <QrCode size={13} className="text-[#FF6B7A]" />
-                    </div>
-                    <p className="text-[11px] font-bold tracking-wide text-white">Scan to Pay</p>
+                    <QrCode size={14} className="text-[#FF4D5E]" />
+                    <p className="text-[11px] font-bold text-white">Scan to Pay</p>
                   </div>
                   <div className="mb-3 flex justify-center">
-                    <div className="relative rounded-[22px] bg-white p-3 shadow-[0_10px_30px_rgba(255,77,94,0.15)]">
-                      <img
-                        key={selected}
-                        src={PLAN_QR[selected]}
-                        alt="Payment QR"
-                        className="h-40 w-40 rounded-lg object-contain"
-                      />
-                      {[
-                        'left-1 top-1 border-l-2 border-t-2 rounded-tl-lg',
-                        'right-1 top-1 border-r-2 border-t-2 rounded-tr-lg',
-                        'left-1 bottom-1 border-l-2 border-b-2 rounded-bl-lg',
-                        'right-1 bottom-1 border-r-2 border-b-2 rounded-br-lg',
-                      ].map((pos, i) => (
-                        <span
-                          key={i}
-                          className={`pointer-events-none absolute h-4 w-4 border-[#FF6B7A] ${pos}`}
-                        />
-                      ))}
-                    </div>
+                    <img
+                      key={selected}
+                      src={PLAN_QR[selected]}
+                      alt="Payment QR"
+                      className="h-40 w-40 rounded-2xl border-2 border-[#FF4D5E]/30 bg-white p-2 object-contain"
+                    />
                   </div>
 
                   <div className="mb-1.5 grid grid-cols-2 gap-2">
@@ -782,7 +725,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 style={{
                   background:
                     autoStatus === 'confirmed'
-                      ? 'radial-gradient(circle, rgba(245,168,184,0.25) 0%, rgba(34,197,94,0.08) 70%)'
+                      ? 'radial-gradient(circle, rgba(232,169,74,0.25) 0%, rgba(34,197,94,0.08) 70%)'
                       : 'rgba(255,77,94,0.15)',
                 }}
               >
@@ -801,7 +744,7 @@ export default function SubscriptionModal({ onClose }: Props) {
               </div>
               <p className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white">
                 {autoStatus === 'confirmed' && (
-                  <Crown size={15} className="text-[#F5A8B8]" fill="#F5A8B8" strokeWidth={0} />
+                  <Crown size={15} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
                 )}
                 {autoStatus === 'confirmed' ? t.subYourePremium : t.subRequestReceived}
               </p>
@@ -811,7 +754,7 @@ export default function SubscriptionModal({ onClose }: Props) {
               <button
                 onClick={onClose}
                 className="mt-4 rounded-xl px-6 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
+                style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
               >
                 {autoStatus === 'confirmed' ? t.subStartWatching : t.subCloseBtn}
               </button>

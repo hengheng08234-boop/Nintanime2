@@ -62,7 +62,7 @@ export default function WatchlistScreen({
         {/* Continue watching */}
         <section className="mt-4">
           <div className="mb-3 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-[#FFD23F]" />
+            <Clock className="h-5 w-5 text-[#E8A94A]" />
             <h2 className="text-lg font-bold tracking-tight">{t.continueWatching}</h2>
           </div>
           {continueItems.length === 0 ? (

@@ -10,6 +10,16 @@ import {
   Edit3,
   Settings,
   ChevronRight,
+  Crown,
+  Calendar,
+  KeyRound,
+  Send,
+  Info,
+  Plus,
+  Minus,
+  Eye,
+  EyeOff,
+  Smartphone,
 } from 'lucide-react';
 import type { Profile } from '@/lib/auth';
 import {
@@ -17,16 +27,23 @@ import {
   updateProfile,
   uploadAvatar,
   signOut,
+  changePassword,
+  isSubscribed,
 } from '@/lib/auth';
 import { useLang } from '@/lib/useLang';
 import { appText } from '@/lib/appTranslations';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+
+// TODO: replace with the real support chat link once it's ready.
+const TELEGRAM_SUPPORT_LINK = 'https://t.me/';
+const APP_VERSION = '1.0.0';
 
 interface ProfileScreenProps {
   userId: string;
   onBack: () => void;
   onSignOut: () => void;
   onOpenAdmin: () => void;
+  onOpenSubscription: () => void;
 }
 
 export default function ProfileScreen({
@@ -34,6 +51,7 @@ export default function ProfileScreen({
   onBack,
   onSignOut,
   onOpenAdmin,
+  onOpenSubscription,
 }: ProfileScreenProps) {
   const { lang, setLang } = useLang();
   const t = appText[lang];
@@ -46,6 +64,18 @@ export default function ProfileScreen({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  // Change password
+  const [showPwSection, setShowPwSection] = useState(false);
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSaved, setPwSaved] = useState(false);
+
+  // About us accordion
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -98,6 +128,40 @@ export default function ProfileScreen({
     await signOut();
     onSignOut();
   };
+
+  const handleChangePassword = async () => {
+    setPwError(null);
+    if (newPw !== confirmPw) {
+      setPwError(t.newPasswordMismatch);
+      return;
+    }
+    setPwSaving(true);
+    const { error: e } = await changePassword(newPw);
+    setPwSaving(false);
+    if (e) {
+      setPwError(e);
+      return;
+    }
+    setNewPw('');
+    setConfirmPw('');
+    setPwSaved(true);
+    setTimeout(() => setPwSaved(false), 2500);
+  };
+
+  const expiresAt = profile?.subscription_expires_at
+    ? new Date(profile.subscription_expires_at)
+    : null;
+  const subscribed = isSubscribed(profile);
+  const daysLeft = expiresAt
+    ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
+  const formattedExpiry = expiresAt
+    ? expiresAt.toLocaleDateString(lang === 'km' ? 'km-KH' : 'en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
 
   if (loading) {
     return (
@@ -240,6 +304,188 @@ export default function ProfileScreen({
               <span className="text-base font-semibold text-white">
                 {profile?.phone || '—'}
               </span>
+            </div>
+
+            {/* Membership / expiry status */}
+            <div
+              className="overflow-hidden rounded-2xl p-4"
+              style={{
+                border: subscribed
+                  ? '1px solid rgba(232,169,74,0.3)'
+                  : '1px solid rgba(255,255,255,0.1)',
+                background: subscribed
+                  ? 'linear-gradient(160deg, rgba(232,169,74,0.1) 0%, rgba(255,77,94,0.05) 100%)'
+                  : 'rgba(255,255,255,0.03)',
+              }}
+            >
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-white/50">
+                <Crown className="h-4 w-4" /> {t.membershipStatus}
+              </div>
+              {subscribed ? (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <Crown size={15} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
+                    <span className="text-base font-bold text-white">{t.premiumActive}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 text-sm text-white/60">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {t.premiumUntil}: <span className="font-semibold text-white/85">{formattedExpiry}</span>
+                  </div>
+                  {daysLeft !== null && (
+                    <p className="mt-1 text-xs text-white/40">
+                      {daysLeft} {t.daysRemaining}
+                    </p>
+                  )}
+                  <button
+                    onClick={onOpenSubscription}
+                    className="mt-3 rounded-xl px-4 py-2 text-xs font-bold text-black transition hover:opacity-90"
+                    style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                  >
+                    {t.renewNow}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-white/70">{t.noActiveSubscription}</p>
+                  <button
+                    onClick={onOpenSubscription}
+                    className="mt-3 flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-black transition hover:opacity-90"
+                    style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                  >
+                    <Crown className="h-3.5 w-3.5" />
+                    {t.getPremium}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Change password */}
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+              <button
+                onClick={() => setShowPwSection((s) => !s)}
+                className="flex w-full items-center gap-3 p-4 text-left"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.05]">
+                  <KeyRound className="h-4 w-4 text-white/70" />
+                </div>
+                <span className="flex-1 text-sm font-bold text-white">{t.changePassword}</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
+                  {showPwSection ? (
+                    <Minus size={14} className="text-white" />
+                  ) : (
+                    <Plus size={14} className="text-white" />
+                  )}
+                </span>
+              </button>
+              {showPwSection && (
+                <div
+                  className="space-y-2.5 p-4"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  <div className="relative">
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={newPw}
+                      onChange={(e) => setNewPw(e.target.value)}
+                      placeholder={t.newPassword}
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 pr-10 text-sm text-white outline-none focus:border-[#E8A94A]/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((s) => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+                      aria-label={showPw ? 'Hide password' : 'Show password'}
+                    >
+                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={confirmPw}
+                    onChange={(e) => setConfirmPw(e.target.value)}
+                    placeholder={t.confirmNewPasswordLabel}
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white outline-none focus:border-[#E8A94A]/50"
+                  />
+                  {pwError && <p className="text-xs text-[#EF4444]">{pwError}</p>}
+                  {pwSaved && <p className="text-xs text-[#22C55E]">{t.passwordUpdated}</p>}
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={pwSaving || !newPw || !confirmPw}
+                    className="w-full rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {pwSaving ? t.updatingPassword : t.updatePassword}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Telegram support */}
+            <a
+              href={TELEGRAM_SUPPORT_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-[#29A9EA]/30 hover:bg-white/[0.05]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#29A9EA]/15">
+                <Send className="h-5 w-5 text-[#29A9EA]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-white">{t.telegramSupport}</p>
+                <p className="text-xs text-white/50">{t.telegramSupportSubtitle}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-white/30" />
+            </a>
+
+            {/* About us */}
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+              <button
+                onClick={() => setShowAbout((s) => !s)}
+                className="flex w-full items-center gap-3 p-4 text-left"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.05]">
+                  <Info className="h-5 w-5 text-white/70" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-white">{t.aboutUs}</p>
+                  <p className="text-xs text-white/50">{t.aboutUsSubtitle}</p>
+                </div>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
+                  {showAbout ? (
+                    <Minus size={14} className="text-white" />
+                  ) : (
+                    <Plus size={14} className="text-white" />
+                  )}
+                </span>
+              </button>
+              {showAbout && (
+                <div
+                  className="space-y-3 p-4 pt-3"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  <p className="text-sm leading-relaxed text-white/60">{t.aboutUsBody}</p>
+                  <div className="flex items-center justify-between text-xs text-white/40">
+                    <span>{t.appVersion}</span>
+                    <span className="font-semibold text-white/60">{APP_VERSION}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-white/40">
+                    <span>{t.contactUs}</span>
+                    <a
+                      href={TELEGRAM_SUPPORT_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 font-semibold text-[#29A9EA] hover:underline"
+                    >
+                      <Send className="h-3 w-3" /> Telegram
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Security note */}
+            <div className="flex items-center gap-2 px-1 text-[11px] text-white/30">
+              <Smartphone className="h-3.5 w-3.5 flex-shrink-0" />
+              {t.oneDeviceNote}
             </div>
           </div>
 

@@ -9,6 +9,8 @@ import {
   Loader2,
   ShieldCheck,
   Film,
+  Smartphone,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   signUp,
@@ -27,6 +29,7 @@ interface AuthScreenProps {
   onBack: () => void;
   onSuccess: () => void;
   onSwitch: (mode: 'signin' | 'signup') => void;
+  kickedOut?: boolean;
 }
 
 export default function AuthScreen({
@@ -34,6 +37,7 @@ export default function AuthScreen({
   onBack,
   onSuccess,
   onSwitch,
+  kickedOut,
 }: AuthScreenProps) {
   const isSignUp = mode === 'signup';
   const { lang, setLang, isKm } = useLang();
@@ -116,7 +120,7 @@ export default function AuthScreen({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 12% -5%, rgba(255,170,60,0.22) 0%, rgba(10,10,15,0) 48%), radial-gradient(circle at 88% 105%, rgba(255,77,94,0.18) 0%, rgba(10,10,15,0) 52%)',
+            'radial-gradient(circle at 12% -5%, rgba(201,122,46,0.22) 0%, rgba(10,10,15,0) 48%), radial-gradient(circle at 88% 105%, rgba(255,77,94,0.18) 0%, rgba(10,10,15,0) 52%)',
         }}
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0A0A0F]/55 via-[#0A0A0F]/80 to-[#0A0A0F]" />
@@ -176,8 +180,22 @@ export default function AuthScreen({
         {/* Form card */}
         <div className="flex flex-1 items-center justify-center px-5 py-8">
           <div className="w-full max-w-md">
+            {kickedOut && (
+              <div className="mb-5 flex items-start gap-3 rounded-2xl border border-[#EF4444]/30 bg-[#EF4444]/[0.08] p-4 text-left">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#EF4444]/15">
+                  <AlertTriangle className="h-4 w-4 text-[#EF4444]" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">{t.sessionKickedTitle}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-white/60">
+                    {t.sessionKickedMessage}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="mb-7 text-center">
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#FFD23F]/25 bg-[#FFD23F]/[0.08] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#FFD23F]">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#E8A94A]/25 bg-[#E8A94A]/[0.08] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#E8A94A]">
                 <ShieldCheck className="h-3 w-3" /> Premium Access
               </div>
               <h1
@@ -273,8 +291,8 @@ export default function AuthScreen({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-black shadow-[0_10px_30px_rgba(255,170,60,0.3)] transition hover:shadow-[0_14px_40px_rgba(255,170,60,0.45)] active:scale-[0.98] disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #FFD23F, #FF9F3C)' }}
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-black shadow-[0_10px_30px_rgba(201,122,46,0.3)] transition hover:shadow-[0_14px_40px_rgba(201,122,46,0.45)] active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #E8A94A, #FF9F3C)' }}
                 >
                   {loading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -285,6 +303,11 @@ export default function AuthScreen({
                     </>
                   )}
                 </button>
+
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[10.5px] leading-relaxed text-white/35">
+                  <Smartphone className="h-3 w-3 flex-shrink-0" />
+                  {t.oneDeviceNote}
+                </p>
               </form>
             </div>
 
@@ -292,7 +315,7 @@ export default function AuthScreen({
               {isSignUp ? t.haveAccount : t.noAccount}{' '}
               <button
                 onClick={() => onSwitch(isSignUp ? 'signin' : 'signup')}
-                className="font-semibold text-[#FFD23F] transition hover:text-[#FFE27A]"
+                className="font-semibold text-[#E8A94A] transition hover:text-[#F3CD82]"
               >
                 {isSignUp ? t.switchToSignIn : t.switchToSignUp}
               </button>
@@ -340,7 +363,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-12 pr-11 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#FFD23F]/50 focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(255,210,63,0.12)]"
+          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-12 pr-11 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#E8A94A]/50 focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(232,169,74,0.12)]"
         />
         {trailing && (
           <span className="absolute right-3.5 top-1/2 -translate-y-1/2">
