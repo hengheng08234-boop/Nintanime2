@@ -9,6 +9,7 @@ import {
   Building2,
   Clock,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
 import type { Show, ShowWithGenres, Episode } from '@/lib/types';
 import { fetchShowById, fetchEpisodesByShow } from '@/lib/api';
@@ -19,12 +20,14 @@ interface ShowDetailScreenProps {
   show: Show;
   onBack: () => void;
   onPlayEpisode: (episode: Episode, show: ShowWithGenres) => void;
+  subscribed: boolean;
 }
 
 export default function ShowDetailScreen({
   show,
   onBack,
   onPlayEpisode,
+  subscribed,
 }: ShowDetailScreenProps) {
   const { lang } = useLang();
   const t = appText[lang];
@@ -205,24 +208,49 @@ export default function ShowDetailScreen({
               <p className="text-sm text-white/40">{t.noEpisodes}</p>
             ) : (
               <div className="space-y-3">
-                {episodes.map((ep) => (
+                {episodes.map((ep) => {
+                  const locked = !subscribed && !ep.is_free_preview;
+                  return (
                   <button
                     key={ep.id}
                     onClick={() => detail && onPlayEpisode(ep, detail)}
-                    className="group flex w-full items-center gap-4 overflow-hidden rounded-xl border border-white/5 bg-[#14141C] p-3 text-left transition hover:border-[#FF4D5E]/30 hover:bg-[#1E1E2A]"
+                    className={`group flex w-full items-center gap-4 overflow-hidden rounded-xl border p-3 text-left transition ${
+                      locked
+                        ? 'border-[#FFD23F]/25 bg-[#1A1710] hover:border-[#FFD23F]/60 hover:shadow-[0_0_24px_rgba(255,210,63,0.18)]'
+                        : 'border-white/5 bg-[#14141C] hover:border-[#FF4D5E]/30 hover:bg-[#1E1E2A]'
+                    }`}
                   >
                     <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg sm:w-48">
                       <img
                         src={ep.thumbnail_url ?? show.banner_url ?? ''}
                         alt={ep.title}
                         loading="lazy"
-                        className="h-full w-full object-cover transition group-hover:scale-105"
+                        className={`h-full w-full object-cover transition group-hover:scale-105 ${
+                          locked ? 'brightness-[0.45]' : ''
+                        }`}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E]">
-                          <Play className="h-4 w-4 fill-white text-white" />
+                      {locked ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/20">
+                          <div
+                            className="flex h-10 w-10 items-center justify-center rounded-full transition group-hover:scale-110"
+                            style={{
+                              background: 'linear-gradient(145deg, #FFE27A 0%, #FFD23F 45%, #E8A917 100%)',
+                              boxShadow: '0 0 18px rgba(255,210,63,0.55)',
+                            }}
+                          >
+                            <Lock className="h-4 w-4 text-[#3A2A00]" strokeWidth={2.5} />
+                          </div>
+                          <span className="rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#FFD23F]">
+                            {t.lockedVip}
+                          </span>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E]">
+                            <Play className="h-4 w-4 fill-white text-white" />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -239,17 +267,26 @@ export default function ShowDetailScreen({
                             Free
                           </span>
                         )}
+                        {locked && (
+                          <span
+                            className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#3A2A00]"
+                            style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
+                          >
+                            <Lock className="h-2.5 w-2.5" /> {t.lockedVip}
+                          </span>
+                        )}
                       </div>
                       <h3 className="mt-0.5 truncate text-base font-semibold text-white transition group-hover:text-[#FF4D5E]">
                         {ep.title}
                       </h3>
                       <p className="mt-1 line-clamp-1 text-sm text-white/50">
-                        {ep.description}
+                        {locked ? t.lockedUnlockHint : ep.description}
                       </p>
                     </div>
                     <ChevronRight className="hidden h-5 w-5 shrink-0 text-white/30 transition group-hover:text-[#FF4D5E] sm:block" />
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
