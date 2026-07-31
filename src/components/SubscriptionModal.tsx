@@ -238,7 +238,7 @@ export default function SubscriptionModal({ onClose }: Props) {
         className="relative w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-[28px] text-white shadow-2xl"
         style={{
           background: '#0F0F1A',
-          border: '1px solid rgba(255,210,63,0.22)',
+          border: '1px solid rgba(245,168,184,0.22)',
           boxShadow:
             '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04), 0 0 70px rgba(147,97,255,0.10)',
         }}
@@ -252,7 +252,7 @@ export default function SubscriptionModal({ onClose }: Props) {
               'radial-gradient(130% 150% at 50% -15%, #3B2E6B 0%, #201A38 48%, #0C0C16 100%)',
           }}
         >
-          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#FFD23F]/14 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#F5A8B8]/14 blur-3xl" />
           <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#9361FF]/20 blur-3xl" />
           <button
             onClick={onClose}
@@ -264,8 +264,8 @@ export default function SubscriptionModal({ onClose }: Props) {
             <div
               className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl p-2.5"
               style={{
-                background: 'linear-gradient(145deg, #FFE27A 0%, #FFD23F 45%, #E8A917 100%)',
-                boxShadow: '0 8px 28px rgba(255,210,63,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset',
+                background: 'linear-gradient(145deg, #FFD9C2 0%, #F5A8B8 45%, #C96580 100%)',
+                boxShadow: '0 8px 28px rgba(245,168,184,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset',
               }}
             >
               <img
@@ -282,11 +282,11 @@ export default function SubscriptionModal({ onClose }: Props) {
               className="flex items-center gap-1.5 text-lg font-extrabold tracking-wide"
               style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.03em' }}
             >
-              <Crown size={17} className="text-[#FFD23F]" fill="#FFD23F" strokeWidth={0} />
+              <Crown size={17} className="text-[#F5A8B8]" fill="#F5A8B8" strokeWidth={0} />
               {t.subGoPremium}
             </p>
             <div className="mt-1.5 flex items-center gap-1.5">
-              <Sparkles size={12} className="text-[#FFD23F]" />
+              <Sparkles size={12} className="text-[#F5A8B8]" />
               <p className="text-[11px] text-white/55">{t.subTagline}</p>
             </div>
           </div>
@@ -309,14 +309,14 @@ export default function SubscriptionModal({ onClose }: Props) {
                       className="relative rounded-2xl p-3 text-center transition-all duration-200"
                       style={{
                         border: isSelected
-                          ? '1.5px solid #FFD23F'
+                          ? '1.5px solid #F5A8B8'
                           : '1.5px solid rgba(255,255,255,0.08)',
                         background: isSelected
-                          ? 'linear-gradient(160deg, rgba(255,210,63,0.14) 0%, rgba(255,77,94,0.08) 100%)'
+                          ? 'linear-gradient(160deg, rgba(245,168,184,0.14) 0%, rgba(255,77,94,0.08) 100%)'
                           : 'rgba(255,255,255,0.02)',
                         transform: isSelected ? 'translateY(-2px)' : 'none',
                         boxShadow: isSelected
-                          ? '0 8px 20px rgba(255,210,63,0.15)'
+                          ? '0 8px 20px rgba(245,168,184,0.15)'
                           : 'none',
                       }}
                     >
@@ -324,7 +324,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         <span
                           className="absolute -top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-black"
                           style={{
-                            background: 'linear-gradient(90deg, #FFD23F, #FFB020)',
+                            background: 'linear-gradient(90deg, #F5A8B8, #E17B94)',
                           }}
                         >
                           <Sparkles size={7} />
@@ -336,7 +336,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       </p>
                       <p
                         className="mt-0.5 text-xl font-extrabold"
-                        style={{ color: isSelected ? '#FFD23F' : '#FF4D5E' }}
+                        style={{ color: isSelected ? '#F5A8B8' : '#FF4D5E' }}
                       >
                         ${p.price}
                       </p>
@@ -388,7 +388,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   style={
                     payMode === 'auto'
                       ? {
-                          background: 'linear-gradient(90deg,#FFD23F,#FFB020)',
+                          background: 'linear-gradient(90deg,#F5A8B8,#E17B94)',
                           boxShadow: '0 4px 14px rgba(255,176,32,0.3)',
                         }
                       : undefined
@@ -421,9 +421,9 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div
                   className="mb-3 rounded-2xl p-4"
                   style={{
-                    border: '1px solid rgba(255,210,63,0.22)',
+                    border: '1px solid rgba(245,168,184,0.22)',
                     background:
-                      'linear-gradient(160deg, rgba(255,210,63,0.07) 0%, rgba(147,97,255,0.04) 55%, rgba(255,255,255,0.02) 100%)',
+                      'linear-gradient(160deg, rgba(245,168,184,0.07) 0%, rgba(147,97,255,0.04) 55%, rgba(255,255,255,0.02) 100%)',
                   }}
                 >
                   <div className="mb-3 flex items-center justify-center gap-1.5 rounded-full py-1">
@@ -443,7 +443,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleGenerateAutoQr}
                         className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-black transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
+                        style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
                       >
                         <Zap size={14} />
                         {t.subGenerateQr}
@@ -466,7 +466,7 @@ export default function SubscriptionModal({ onClose }: Props) {
 
                   {autoStatus === 'loading' && (
                     <div className="mx-auto flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10">
-                      <Loader2 size={28} className="animate-spin text-[#FFD23F]" />
+                      <Loader2 size={28} className="animate-spin text-[#F5A8B8]" />
                       <p className="text-[10px] text-white/50">{t.subGeneratingQr}</p>
                     </div>
                   )}
@@ -474,7 +474,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {autoStatus === 'waiting' && autoQr && (
                     <>
                       <div className="mb-3 flex justify-center">
-                        <div className="relative rounded-[22px] bg-white p-3 shadow-[0_10px_30px_rgba(255,210,63,0.18)]">
+                        <div className="relative rounded-[22px] bg-white p-3 shadow-[0_10px_30px_rgba(245,168,184,0.18)]">
                           <img
                             src={autoQr.qrImage}
                             alt="Payment QR"
@@ -489,7 +489,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                           ].map((pos, i) => (
                             <span
                               key={i}
-                              className={`pointer-events-none absolute h-4 w-4 border-[#FFB020] ${pos}`}
+                              className={`pointer-events-none absolute h-4 w-4 border-[#E17B94] ${pos}`}
                             />
                           ))}
                         </div>
@@ -497,13 +497,13 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <div className="mb-3 flex items-center justify-center">
                         <div
                           className="flex items-center gap-1.5 rounded-full px-3 py-1"
-                          style={{ background: 'rgba(255,210,63,0.12)', border: '1px solid rgba(255,210,63,0.25)' }}
+                          style={{ background: 'rgba(245,168,184,0.12)', border: '1px solid rgba(245,168,184,0.25)' }}
                         >
-                          <Loader2 size={12} className="animate-spin text-[#FFD23F]" />
-                          <p className="text-[10px] font-semibold text-[#FFD23F]">
+                          <Loader2 size={12} className="animate-spin text-[#F5A8B8]" />
+                          <p className="text-[10px] font-semibold text-[#F5A8B8]">
                             {t.subAutoVerifying}
                           </p>
-                          <span className="rounded-full bg-[#FFD23F]/20 px-1.5 py-[1px] font-mono text-[10px] font-bold text-white">
+                          <span className="rounded-full bg-[#F5A8B8]/20 px-1.5 py-[1px] font-mono text-[10px] font-bold text-white">
                             {formatCountdown(secondsLeft)}
                           </span>
                         </div>
@@ -553,7 +553,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleGenerateAutoQr}
                         className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
+                        style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
                       >
                         <RefreshCw size={13} />
                         {t.subGenerateNewQr}
@@ -567,7 +567,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleGenerateAutoQr}
                         className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
+                        style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
                       >
                         <RefreshCw size={13} />
                         {t.subTryAgain}
@@ -782,7 +782,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 style={{
                   background:
                     autoStatus === 'confirmed'
-                      ? 'radial-gradient(circle, rgba(255,210,63,0.25) 0%, rgba(34,197,94,0.08) 70%)'
+                      ? 'radial-gradient(circle, rgba(245,168,184,0.25) 0%, rgba(34,197,94,0.08) 70%)'
                       : 'rgba(255,77,94,0.15)',
                 }}
               >
@@ -801,7 +801,7 @@ export default function SubscriptionModal({ onClose }: Props) {
               </div>
               <p className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white">
                 {autoStatus === 'confirmed' && (
-                  <Crown size={15} className="text-[#FFD23F]" fill="#FFD23F" strokeWidth={0} />
+                  <Crown size={15} className="text-[#F5A8B8]" fill="#F5A8B8" strokeWidth={0} />
                 )}
                 {autoStatus === 'confirmed' ? t.subYourePremium : t.subRequestReceived}
               </p>
@@ -811,7 +811,7 @@ export default function SubscriptionModal({ onClose }: Props) {
               <button
                 onClick={onClose}
                 className="mt-4 rounded-xl px-6 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                style={{ background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }}
+                style={{ background: 'linear-gradient(90deg,#F5A8B8,#E17B94)' }}
               >
                 {autoStatus === 'confirmed' ? t.subStartWatching : t.subCloseBtn}
               </button>
