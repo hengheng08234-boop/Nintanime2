@@ -237,10 +237,10 @@ export default function SubscriptionModal({ onClose }: Props) {
       <div
         className="relative w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-[28px] text-white shadow-2xl"
         style={{
-          background: '#101018',
-          border: '1px solid rgba(255,210,63,0.18)',
+          background: '#0F0F1A',
+          border: '1px solid rgba(255,210,63,0.22)',
           boxShadow:
-            '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), 0 0 60px rgba(255,77,94,0.08)',
+            '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04), 0 0 70px rgba(147,97,255,0.10)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -249,11 +249,11 @@ export default function SubscriptionModal({ onClose }: Props) {
           className="relative overflow-hidden px-5 pb-6 pt-5"
           style={{
             background:
-              'radial-gradient(120% 140% at 50% -20%, #262035 0%, #171626 45%, #0d0d16 100%)',
+              'radial-gradient(130% 150% at 50% -15%, #3B2E6B 0%, #201A38 48%, #0C0C16 100%)',
           }}
         >
-          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#FFD23F]/10 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#FF4D5E]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#FFD23F]/14 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#9361FF]/20 blur-3xl" />
           <button
             onClick={onClose}
             className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
@@ -376,15 +376,21 @@ export default function SubscriptionModal({ onClose }: Props) {
               </div>
 
               {/* Payment mode tabs */}
-              <div className="mb-3 flex gap-1.5 rounded-xl bg-white/[0.04] p-1">
+              <div
+                className="mb-3 flex gap-1.5 rounded-xl p-1"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }}
+              >
                 <button
                   onClick={() => setPayMode('auto')}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
-                    payMode === 'auto' ? 'text-black' : 'text-white/50'
+                    payMode === 'auto' ? 'text-black' : 'text-white/55'
                   }`}
                   style={
                     payMode === 'auto'
-                      ? { background: 'linear-gradient(90deg,#FFD23F,#FFB020)' }
+                      ? {
+                          background: 'linear-gradient(90deg,#FFD23F,#FFB020)',
+                          boxShadow: '0 4px 14px rgba(255,176,32,0.3)',
+                        }
                       : undefined
                   }
                 >
@@ -394,10 +400,16 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <button
                   onClick={() => setPayMode('manual')}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
-                    payMode === 'manual'
-                      ? 'bg-[#FF4D5E] text-white'
-                      : 'text-white/50'
+                    payMode === 'manual' ? 'text-white' : 'text-white/55'
                   }`}
+                  style={
+                    payMode === 'manual'
+                      ? {
+                          background: 'linear-gradient(90deg,#FF6B7A,#E63946)',
+                          boxShadow: '0 4px 14px rgba(230,57,70,0.3)',
+                        }
+                      : undefined
+                  }
                 >
                   <QrCode size={13} />
                   {t.subManual}
@@ -409,16 +421,16 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div
                   className="mb-3 rounded-2xl p-4"
                   style={{
-                    border: '1px solid rgba(255,210,63,0.15)',
+                    border: '1px solid rgba(255,210,63,0.22)',
                     background:
-                      'linear-gradient(160deg, rgba(255,210,63,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                      'linear-gradient(160deg, rgba(255,210,63,0.07) 0%, rgba(147,97,255,0.04) 55%, rgba(255,255,255,0.02) 100%)',
                   }}
                 >
-                  <div className="mb-3 flex items-center justify-center gap-1.5">
+                  <div className="mb-3 flex items-center justify-center gap-1.5 rounded-full py-1">
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#22C55E]/15">
                       <ShieldCheck size={13} className="text-[#22C55E]" />
                     </div>
-                    <p className="text-[11px] font-bold text-white">
+                    <p className="text-[11px] font-bold tracking-wide text-white">
                       {t.subPayWithKhqr}
                     </p>
                   </div>
@@ -462,49 +474,72 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {autoStatus === 'waiting' && autoQr && (
                     <>
                       <div className="mb-3 flex justify-center">
-                        <div className="relative">
+                        <div className="relative rounded-[22px] bg-white p-3 shadow-[0_10px_30px_rgba(255,210,63,0.18)]">
                           <img
                             src={autoQr.qrImage}
                             alt="Payment QR"
-                            className="h-44 w-44 rounded-2xl border-2 border-[#FFD23F]/40 bg-white p-2 object-contain"
+                            className="h-40 w-40 rounded-lg object-contain"
                           />
-                          <div className="absolute -inset-1 animate-pulse rounded-2xl border-2 border-[#FFD23F]/30" />
+                          {/* Scanner-style corner brackets, gold accent */}
+                          {[
+                            'left-1 top-1 border-l-2 border-t-2 rounded-tl-lg',
+                            'right-1 top-1 border-r-2 border-t-2 rounded-tr-lg',
+                            'left-1 bottom-1 border-l-2 border-b-2 rounded-bl-lg',
+                            'right-1 bottom-1 border-r-2 border-b-2 rounded-br-lg',
+                          ].map((pos, i) => (
+                            <span
+                              key={i}
+                              className={`pointer-events-none absolute h-4 w-4 border-[#FFB020] ${pos}`}
+                            />
+                          ))}
                         </div>
                       </div>
-                      <div className="mb-3 flex items-center justify-center gap-1.5">
-                        <Loader2 size={12} className="animate-spin text-[#FFD23F]" />
-                        <p className="text-[10px] font-semibold text-white">
-                          {t.subAutoVerifying} ({formatCountdown(secondsLeft)})
-                        </p>
+                      <div className="mb-3 flex items-center justify-center">
+                        <div
+                          className="flex items-center gap-1.5 rounded-full px-3 py-1"
+                          style={{ background: 'rgba(255,210,63,0.12)', border: '1px solid rgba(255,210,63,0.25)' }}
+                        >
+                          <Loader2 size={12} className="animate-spin text-[#FFD23F]" />
+                          <p className="text-[10px] font-semibold text-[#FFD23F]">
+                            {t.subAutoVerifying}
+                          </p>
+                          <span className="rounded-full bg-[#FFD23F]/20 px-1.5 py-[1px] font-mono text-[10px] font-bold text-white">
+                            {formatCountdown(secondsLeft)}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Prominent ABA Mobile deep link */}
                       {autoQr.abapayDeeplink && (
                         <a
                           href={autoQr.abapayDeeplink}
-                          className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 transition hover:opacity-90"
+                          className="mb-2 flex w-full items-center gap-3 rounded-xl p-2.5 transition hover:opacity-90"
                           style={{
-                            background: 'linear-gradient(135deg, #14707F 0%, #0C5261 100%)',
-                            boxShadow: '0 6px 18px rgba(15,95,123,0.35)',
+                            background: 'linear-gradient(135deg, #17B39E 0%, #0E7A6B 100%)',
+                            boxShadow: '0 8px 20px rgba(20,150,130,0.3)',
                           }}
                         >
-                          <img
-                            src={ABA_ICON}
-                            alt="ABA Mobile"
-                            className="h-9 w-9 rounded-[9px] object-cover"
-                          />
+                          <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-white/95">
+                            <img
+                              src={ABA_ICON}
+                              alt="ABA Mobile"
+                              className="h-7 w-7 rounded-[6px] object-cover"
+                            />
+                          </span>
                           <span className="flex-1 text-left">
-                            <span className="block text-[12px] font-bold text-white">
+                            <span className="block text-[12.5px] font-bold text-white">
                               {t.subOpenAba}
                             </span>
-                            <span className="block text-[9.5px] text-white/70">
+                            <span className="block text-[9.5px] text-white/80">
                               {t.subPayOneTap}
                             </span>
                           </span>
-                          <ArrowRight size={16} className="text-white/80" />
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15">
+                            <ArrowRight size={14} className="text-white" />
+                          </span>
                         </a>
                       )}
-                      <p className="text-center text-[9.5px] text-white/35">
+                      <p className="text-center text-[9.5px] text-white/40">
                         {t.subAlreadyPaidHint}
                       </p>
                     </>
@@ -544,18 +579,40 @@ export default function SubscriptionModal({ onClose }: Props) {
 
               {/* MANUAL PAY */}
               {payMode === 'manual' && (
-                <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                <div
+                  className="mb-3 rounded-2xl p-4"
+                  style={{
+                    border: '1px solid rgba(255,107,122,0.22)',
+                    background:
+                      'linear-gradient(160deg, rgba(255,77,94,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                  }}
+                >
                   <div className="mb-3 flex items-center justify-center gap-1.5">
-                    <QrCode size={14} className="text-[#FF4D5E]" />
-                    <p className="text-[11px] font-bold text-white">Scan to Pay</p>
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF4D5E]/15">
+                      <QrCode size={13} className="text-[#FF6B7A]" />
+                    </div>
+                    <p className="text-[11px] font-bold tracking-wide text-white">Scan to Pay</p>
                   </div>
                   <div className="mb-3 flex justify-center">
-                    <img
-                      key={selected}
-                      src={PLAN_QR[selected]}
-                      alt="Payment QR"
-                      className="h-40 w-40 rounded-2xl border-2 border-[#FF4D5E]/30 bg-white p-2 object-contain"
-                    />
+                    <div className="relative rounded-[22px] bg-white p-3 shadow-[0_10px_30px_rgba(255,77,94,0.15)]">
+                      <img
+                        key={selected}
+                        src={PLAN_QR[selected]}
+                        alt="Payment QR"
+                        className="h-40 w-40 rounded-lg object-contain"
+                      />
+                      {[
+                        'left-1 top-1 border-l-2 border-t-2 rounded-tl-lg',
+                        'right-1 top-1 border-r-2 border-t-2 rounded-tr-lg',
+                        'left-1 bottom-1 border-l-2 border-b-2 rounded-bl-lg',
+                        'right-1 bottom-1 border-r-2 border-b-2 rounded-br-lg',
+                      ].map((pos, i) => (
+                        <span
+                          key={i}
+                          className={`pointer-events-none absolute h-4 w-4 border-[#FF6B7A] ${pos}`}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   <div className="mb-1.5 grid grid-cols-2 gap-2">

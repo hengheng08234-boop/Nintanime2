@@ -454,8 +454,8 @@ function CoverflowHero({
 
   return (
     <section
-      className="relative w-full overflow-hidden pt-[72px]"
-      style={{ height: 'min(52vh, 440px)' }}
+      className="relative w-full overflow-hidden pt-[76px]"
+      style={{ height: 'min(60vh, 500px)' }}
       onTouchStart={(e) => onTouchStart(e.touches[0].clientX)}
       onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
     >
@@ -492,7 +492,11 @@ function CoverflowHero({
       </div>
 
       {/* Cards deck */}
-      <div className="relative flex h-full items-center justify-center">
+      <div className="relative mx-auto flex h-full max-w-[1400px] items-center justify-center px-4 sm:px-8">
+        {/* Edge vignettes — let the side cards fade into the backdrop instead of clipping hard */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 bg-gradient-to-r from-[#0A0A0F] via-[#0A0A0F]/70 to-transparent sm:w-32" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l from-[#0A0A0F] via-[#0A0A0F]/70 to-transparent sm:w-32" />
+
         {shows.length > 1 &&
           [-2, -1, 1, 2].map((offset) => {
             const i = (shows.length + index + offset) % shows.length;
@@ -511,8 +515,8 @@ function CoverflowHero({
           onClick={() => onSelectShow(hero)}
           className="relative z-20 flex flex-col items-center"
           style={{
-            width: '38%',
-            maxWidth: 190,
+            width: '40%',
+            maxWidth: 212,
             transform: 'translateZ(0)',
           }}
         >
@@ -612,18 +616,18 @@ interface SideCardProps {
 
 function SideCard({ show, offset, onClick }: SideCardProps) {
   const isNear = Math.abs(offset) === 1;
-  const translateX = offset * 82;
-  const scale = isNear ? 0.62 : 0.46;
+  const translateX = offset * 76;
+  const scale = isNear ? 0.7 : 0.54;
   const z = isNear ? 10 : 5;
-  const opacity = isNear ? 0.75 : 0.28;
+  const opacity = isNear ? 0.85 : 0.4;
 
   return (
     <button
       onClick={onClick}
       className="absolute z-10"
       style={{
-        width: '38%',
-        maxWidth: 190,
+        width: '40%',
+        maxWidth: 212,
         transform: `translateX(${translateX}%) scale(${scale})`,
         zIndex: z,
         opacity,
