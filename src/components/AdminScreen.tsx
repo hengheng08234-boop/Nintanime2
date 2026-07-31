@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { Show, Episode } from '@/lib/types';
+import { extractFunctionErrorMessage } from '@/lib/functionError';
 
 interface AdminScreenProps {
   onBack: () => void;
@@ -215,7 +216,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     });
     setPreviewLoading(false);
     if (error || data?.error) {
-      setPreviewError(data?.error || error?.message || 'Unable to load video');
+      setPreviewError(await extractFunctionErrorMessage(error, data));
       return;
     }
     setPreviewUrl(data.url);

@@ -15,6 +15,7 @@ import type { Episode, ShowWithGenres } from '@/lib/types';
 import { useLang } from '@/lib/useLang';
 import { appText } from '@/lib/appTranslations';
 import { supabase } from '@/lib/supabase/supabaseClient';
+import { extractFunctionErrorMessage } from '@/lib/functionError';
 
 interface VideoPlayerScreenProps {
   episode: Episode;
@@ -71,7 +72,7 @@ export default function VideoPlayerScreen({
       });
       if (cancelled) return;
       if (error || data?.error) {
-        setAccessError(data?.error || error?.message || 'Unable to load video');
+        setAccessError(await extractFunctionErrorMessage(error, data));
         setResolving(false);
         return;
       }
