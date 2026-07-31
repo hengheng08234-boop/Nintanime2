@@ -18,6 +18,7 @@ export interface Show {
   studio: string | null;
   type: ShowType;
   featured: boolean;
+  view_count?: number;
   genres?: Genre[];
 }
 
@@ -31,6 +32,7 @@ export interface Episode {
   thumbnail_url: string | null;
   video_url: string | null;
   duration: number | null;
+  is_free_preview?: boolean;
 }
 
 export interface ShowWithGenres extends Show {
