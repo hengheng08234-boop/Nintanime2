@@ -93,7 +93,8 @@ function App() {
   };
 
   const handlePlayEpisode = (episode: Episode, show: ShowWithGenres) => {
-    if (isSubscribed(profile)) {
+    const canOpen = isSubscribed(profile) || profile?.is_admin || episode.is_free_preview;
+    if (canOpen) {
       addToContinueWatching(show, episode, episode.episode_number - 1);
       setScreen({ name: 'player', episode, show });
     } else {
