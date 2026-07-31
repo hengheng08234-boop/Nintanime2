@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase/supabaseClient';
 import {
   fetchProfile,
   isSubscribed,
+  subscribeToSessionKick,
+  checkSessionStillValid,
   type Profile,
 } from '@/lib/auth';
 import { fetchShowById, fetchEpisodesByShow } from '@/lib/api';
@@ -35,6 +37,7 @@ function App() {
   const [showSubModal, setShowSubModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sessionKicked, setSessionKicked] = useState(false);
 
   const refreshProfile = async (userId: string) => {
     const p = await fetchProfile(userId);
@@ -72,6 +75,7 @@ function App() {
   }, []);
 
   const handleAuthSuccess = () => {
+    setSessionKicked(false);
     setScreen({ name: 'home' });
     setActiveTab('home');
   };
@@ -83,6 +87,37 @@ function App() {
     setScreen({ name: 'home' });
     setActiveTab('home');
   };
+
+  // Single-device sign-in guard: if another device signs in to this same
+  // account, the server's active_session_id changes and this device gets
+  // signed out automatically (realtime push, plus a fallback check whenever
+  // the tab regains focus in case the push was missed while backgrounded).
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const kickOut = async () => {
+      setSessionKicked(true);
+      await supabase.auth.signOut();
+      setSession(null);
+      setProfile(null);
+      setScreen({ name: 'auth', mode: 'signin' });
+    };
+
+    const unsubscribe = subscribeToSessionKick(userId, kickOut);
+
+    const handleVisibility = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const ok = await checkSessionStillValid(userId);
+      if (!ok) kickOut();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [session?.user?.id]);
 
   // Reuse the existing requireAuth pattern: proceed if signed in,
   // otherwise route to signup. Lets logged-out users browse Home freely
@@ -137,21 +172,31 @@ function App() {
     return (
       <AuthScreen
         mode={screen.mode}
-        onBack={() => setScreen({ name: 'home' })}
+        onBack={() => {
+          setSessionKicked(false);
+          setScreen({ name: 'home' });
+        }}
         onSuccess={handleAuthSuccess}
         onSwitch={(mode) => setScreen({ name: 'auth', mode })}
+        kickedOut={sessionKicked}
       />
     );
   }
 
   if (screen.name === 'profile') {
     return (
-      <ProfileScreen
-        userId={session!.user.id}
-        onBack={() => setScreen({ name: 'home' })}
-        onSignOut={handleSignOut}
-        onOpenAdmin={() => setScreen({ name: 'admin' })}
-      />
+      <>
+        <ProfileScreen
+          userId={session!.user.id}
+          onBack={() => setScreen({ name: 'home' })}
+          onSignOut={handleSignOut}
+          onOpenAdmin={() => setScreen({ name: 'admin' })}
+          onOpenSubscription={() => setShowSubModal(true)}
+        />
+        {showSubModal && (
+          <SubscriptionModal onClose={() => setShowSubModal(false)} />
+        )}
+      </>
     );
   }
 
