@@ -21,6 +21,9 @@ export const appText = {
     switchToSignUp: 'Sign up',
     createAccount: 'Create Account',
     signIn: 'Sign In',
+    sessionKickedTitle: 'Signed out',
+    sessionKickedMessage: 'Your account was signed in on another device. Only one device can be active at a time — please sign in again to continue here.',
+    oneDeviceNote: 'For security, only one device can be signed in at a time.',
 
     // Home nav / hero
     tagline: 'Stream · Discover · Obsess',
@@ -59,6 +62,36 @@ export const appText = {
     phone: 'Phone',
     videoManagement: 'Video Management',
     videoManagementSubtitle: 'Upload videos, add episodes, manage content',
+
+    // Profile screen — subscription status
+    membershipStatus: 'Membership',
+    premiumActive: 'Premium Active',
+    premiumExpiredLabel: 'Expired',
+    noActiveSubscription: 'No active subscription',
+    premiumUntil: 'Renews / expires on',
+    daysRemaining: 'days remaining',
+    renewNow: 'Renew',
+    getPremium: 'Get Premium',
+
+    // Profile screen — change password
+    changePassword: 'Change Password',
+    newPassword: 'New password',
+    confirmNewPasswordLabel: 'Confirm new password',
+    updatePassword: 'Update Password',
+    updatingPassword: 'Updating…',
+    passwordUpdated: 'Password updated successfully',
+    newPasswordMismatch: 'Passwords do not match',
+
+    // Profile screen — support & about
+    telegramSupport: 'Telegram Support',
+    telegramSupportSubtitle: 'Chat with us for help anytime',
+    openTelegram: 'Open Telegram',
+    aboutUs: 'About Us',
+    aboutUsSubtitle: 'App info and version',
+    aboutUsBody:
+      'NINT ANIME is a home-grown streaming app bringing you subbed and dubbed anime with fast, reliable playback. Built with love for the community — thank you for being a part of it.',
+    appVersion: 'App version',
+    contactUs: 'Contact us',
 
     // Show detail screen
     movie: 'Movie',
@@ -176,6 +209,9 @@ export const appText = {
     switchToSignUp: 'បង្កើតគណនី',
     createAccount: 'បង្កើតគណនី',
     signIn: 'ចូលគណនី',
+    sessionKickedTitle: 'អ្នកបានចាកចេញ',
+    sessionKickedMessage: 'គណនីរបស់អ្នកទើបតែចូលនៅឧបករណ៍ផ្សេង។ គណនីមួយអាចប្រើបានតែឧបករណ៍មួយក្នុងពេលតែមួយប៉ុណ្ណោះ — សូមចូលគណនីម្ដងទៀតដើម្បីបន្តនៅទីនេះ។',
+    oneDeviceNote: 'សម្រាប់សុវត្ថិភាព គណនីមួយអាចចូលប្រើបានតែឧបករណ៍មួយក្នុងពេលតែមួយប៉ុណ្ណោះ។',
 
     // Home nav / hero
     tagline: 'មើល · ស្វែងរក · ចូលចិត្ត',
@@ -214,6 +250,36 @@ export const appText = {
     phone: 'ទូរស័ព្ទ',
     videoManagement: 'គ្រប់គ្រងវីដេអូ',
     videoManagementSubtitle: 'អាប់ឡូតវីដេអូ បន្ថែមវគ្គ គ្រប់គ្រងមាតិកា',
+
+    // Profile screen — subscription status
+    membershipStatus: 'សមាជិកភាព',
+    premiumActive: 'សមាជិក VIP សកម្ម',
+    premiumExpiredLabel: 'ផុតកំណត់',
+    noActiveSubscription: 'មិនទាន់មានសមាជិកភាពសកម្មទេ',
+    premiumUntil: 'ផុតកំណត់នៅថ្ងៃ',
+    daysRemaining: 'ថ្ងៃទៀតផុតកំណត់',
+    renewNow: 'បន្តសមាជិកភាព',
+    getPremium: 'ជាវ VIP',
+
+    // Profile screen — change password
+    changePassword: 'ប្ដូរពាក្យសម្ងាត់',
+    newPassword: 'ពាក្យសម្ងាត់ថ្មី',
+    confirmNewPasswordLabel: 'បញ្ជាក់ពាក្យសម្ងាត់ថ្មី',
+    updatePassword: 'ធ្វើបច្ចុប្បន្នភាពពាក្យសម្ងាត់',
+    updatingPassword: 'កំពុងធ្វើបច្ចុប្បន្នភាព…',
+    passwordUpdated: 'ពាក្យសម្ងាត់ត្រូវបានប្ដូរដោយជោគជ័យ',
+    newPasswordMismatch: 'ពាក្យសម្ងាត់ថ្មីមិនត្រូវគ្នាទេ',
+
+    // Profile screen — support & about
+    telegramSupport: 'ជំនួយការ Telegram',
+    telegramSupportSubtitle: 'ជជែកជាមួយពួកយើងគ្រប់ពេលដែលអ្នកត្រូវការជំនួយ',
+    openTelegram: 'បើក Telegram',
+    aboutUs: 'អំពីយើង',
+    aboutUsSubtitle: 'ព័ត៌មានកម្មវិធី និងកំណែ',
+    aboutUsBody:
+      'NINT ANIME ជាកម្មវិធីស្ទ្រីមម្ដងក្នុងស្រុក ដែលនាំមកជូននូវអានីមេប្រកបដោយគុណភាព ទាំងបទបកប្រែ និងសំឡេងខ្មែរ ជាមួយការចាក់លឿន និងអាចទុកចិត្តបាន។ សូមអរគុណដែលបានគាំទ្រពួកយើង។',
+    appVersion: 'កំណែកម្មវិធី',
+    contactUs: 'ទាក់ទងយើង',
 
     // Show detail screen
     movie: 'ភាពយន្ត',

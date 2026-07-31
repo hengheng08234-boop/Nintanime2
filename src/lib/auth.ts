@@ -9,12 +9,111 @@ export interface Profile {
   is_admin: boolean;
   trial_started_at: string | null;
   subscription_expires_at: string | null;
+  active_session_id?: string | null;
+  active_session_started_at?: string | null;
 }
 
 export function isSubscribed(profile: Profile | null): boolean {
   if (!profile) return false;
   if (!profile.subscription_expires_at) return false;
   return new Date(profile.subscription_expires_at) > new Date();
+}
+
+// --- Single-device sign-in enforcement --------------------------------
+//
+// Every successful sign-in/sign-up writes a fresh random token to both
+// profiles.active_session_id (server) and localStorage (this device). If a
+// second device signs in to the same account, its write overwrites the
+// server value; the first device's realtime subscription (see
+// subscribeToSessionKick) notices the mismatch and signs itself out.
+
+const SESSION_STORAGE_KEY = 'nint_session_id';
+
+export function getLocalSessionId(): string | null {
+  try {
+    return localStorage.getItem(SESSION_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setLocalSessionId(id: string): void {
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, id);
+  } catch {
+    /* localStorage unavailable — single-device enforcement is skipped */
+  }
+}
+
+export function clearLocalSessionId(): void {
+  try {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch {
+    /* no-op */
+  }
+}
+
+async function claimSession(userId: string): Promise<void> {
+  const sessionId =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  setLocalSessionId(sessionId);
+  await supabase
+    .from('profiles')
+    .update({
+      active_session_id: sessionId,
+      active_session_started_at: new Date().toISOString(),
+    })
+    .eq('id', userId);
+}
+
+// Subscribes to realtime changes on this user's profile row. Fires
+// `onKicked()` the moment active_session_id changes to something other than
+// this device's own token — i.e. another device just signed in. Returns an
+// unsubscribe function.
+export function subscribeToSessionKick(
+  userId: string,
+  onKicked: () => void,
+): () => void {
+  const channel = supabase
+    .channel(`session-guard-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${userId}`,
+      },
+      (payload) => {
+        const newSessionId = (payload.new as { active_session_id?: string | null })
+          .active_session_id;
+        const localId = getLocalSessionId();
+        if (newSessionId && localId && newSessionId !== localId) {
+          onKicked();
+        }
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+// One-shot check for cases where the realtime event was missed (e.g. tab was
+// asleep/backgrounded). Call on app resume/focus.
+export async function checkSessionStillValid(userId: string): Promise<boolean> {
+  const localId = getLocalSessionId();
+  if (!localId) return true; // nothing to compare against yet
+  const { data } = await supabase
+    .from('profiles')
+    .select('active_session_id')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!data?.active_session_id) return true;
+  return data.active_session_id === localId;
 }
 
 // Convert a phone number into a fake email so Supabase email auth can be used
@@ -67,6 +166,7 @@ export async function signUp(opts: {
     avatar_url: null,
   });
   if (profileError) return { error: profileError.message };
+  await claimSession(user.id);
   return { error: null };
 }
 
@@ -75,16 +175,27 @@ export async function signIn(opts: {
   password: string;
 }): Promise<{ error: string | null }> {
   const email = phoneToEmail(opts.phone);
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: opts.password,
   });
   if (error) return { error: error.message };
+  if (data.user) await claimSession(data.user.id);
   return { error: null };
 }
 
 export async function signOut(): Promise<void> {
+  clearLocalSessionId();
   await supabase.auth.signOut();
+}
+
+export async function changePassword(
+  newPassword: string,
+): Promise<{ error: string | null }> {
+  const pwErr = validatePassword(newPassword);
+  if (pwErr) return { error: pwErr };
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  return { error: error?.message ?? null };
 }
 
 export async function fetchProfile(userId: string): Promise<Profile | null> {
