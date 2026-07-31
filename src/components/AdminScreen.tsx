@@ -14,6 +14,9 @@ import {
   Clock,
   Pencil,
   Link2,
+  Lock,
+  Unlock,
+  Play,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { Show, Episode } from '@/lib/types';
@@ -49,6 +52,14 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   });
   const [busy, setBusy] = useState(false);
 
+  // Admin preview modal — lets admin check an uploaded episode plays
+  // correctly, bypassing the subscription check via the is_admin flag
+  // in get-video-url.
+  const [previewFor, setPreviewFor] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+
   // New show / movie creation
   const [addShowOpen, setAddShowOpen] = useState(false);
   const [newShow, setNewShow] = useState({
@@ -66,6 +77,9 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   // Edit existing show
   const [editShow, setEditShow] = useState<ShowWithEpisodes | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editSynopsis, setEditSynopsis] = useState('');
+  const [editRating, setEditRating] = useState('');
+  const [editViewCount, setEditViewCount] = useState('');
   const [editPosterFile, setEditPosterFile] = useState<File | null>(null);
   const [editBannerFile, setEditBannerFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -191,9 +205,48 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     await loadShows();
   };
 
+  const handlePreviewVideo = async (episodeId: string) => {
+    setPreviewFor(episodeId);
+    setPreviewLoading(true);
+    setPreviewError('');
+    setPreviewUrl(null);
+    const { data, error } = await supabase.functions.invoke('get-video-url', {
+      body: { episodeId },
+    });
+    setPreviewLoading(false);
+    if (error || data?.error) {
+      setPreviewError(data?.error || error?.message || 'Unable to load video');
+      return;
+    }
+    setPreviewUrl(data.url);
+  };
+
+  const closePreview = () => {
+    setPreviewFor(null);
+    setPreviewUrl(null);
+    setPreviewError('');
+  };
+
   const handleDeleteEpisode = async (episodeId: string) => {
     if (!confirm('Delete this episode? This cannot be undone.')) return;
     const { error } = await supabase.from('episodes').delete().eq('id', episodeId);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    await loadShows();
+  };
+
+  // Free-preview episodes are playable by any signed-in user, even
+  // without an active subscription — a trial taste of the show. Use
+  // sparingly (e.g. episode 1 of a series) so it doesn't undercut the
+  // subscription itself.
+  const handleToggleFreePreview = async (episodeId: string, next: boolean) => {
+    setError('');
+    const { error } = await supabase
+      .from('episodes')
+      .update({ is_free_preview: next })
+      .eq('id', episodeId);
     if (error) {
       setError(error.message);
       return;
@@ -300,6 +353,9 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const openEdit = (show: ShowWithEpisodes) => {
     setEditShow(show);
     setEditTitle(show.title);
+    setEditSynopsis(show.synopsis ?? '');
+    setEditRating(show.rating != null ? String(show.rating) : '');
+    setEditViewCount(show.view_count != null ? String(show.view_count) : '0');
     setEditPosterFile(null);
     setEditBannerFile(null);
     setEditSuccess(false);
@@ -314,7 +370,12 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     setSavingEdit(true);
     setError('');
 
-    const updates: Record<string, string | null> = { title: editTitle.trim() };
+    const updates: Record<string, string | number | null> = {
+      title: editTitle.trim(),
+      synopsis: editSynopsis.trim() || null,
+      rating: editRating.trim() ? parseFloat(editRating) : 0,
+      view_count: editViewCount.trim() ? parseInt(editViewCount, 10) || 0 : 0,
+    };
 
     if (editPosterFile) {
       const url = await uploadImage('posters', editPosterFile, `poster-${editShow.id}`);
@@ -493,6 +554,11 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                         · {ep.duration} min
                                       </span>
                                     )}
+                                    {ep.is_free_preview && (
+                                      <span className="flex items-center gap-1 rounded-full bg-[#22C55E]/15 px-2 py-0.5 text-[#22C55E]">
+                                        <Unlock className="h-3 w-3" /> Free trial
+                                      </span>
+                                    )}
                                   </div>
                                   {isUploading && (
                                     <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
@@ -503,6 +569,35 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                     </div>
                                   )}
                                 </div>
+                                <button
+                                  onClick={() => handleToggleFreePreview(ep.id, !ep.is_free_preview)}
+                                  title={
+                                    ep.is_free_preview
+                                      ? 'Unlocked for trial — click to require subscription'
+                                      : 'Locked — click to unlock as a free trial episode'
+                                  }
+                                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                                    ep.is_free_preview
+                                      ? 'border-[#22C55E]/30 bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20'
+                                      : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'
+                                  }`}
+                                >
+                                  {ep.is_free_preview ? (
+                                    <Unlock className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <Lock className="h-3.5 w-3.5" />
+                                  )}
+                                  {ep.is_free_preview ? 'Unlocked' : 'Locked'}
+                                </button>
+                                {hasVideo && (
+                                  <button
+                                    onClick={() => handlePreviewVideo(ep.id)}
+                                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+                                  >
+                                    <Play className="h-3.5 w-3.5" />
+                                    Preview
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => triggerFileUpload(ep.id)}
                                   disabled={isUploading}
@@ -880,6 +975,49 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                 />
               </div>
 
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-white/60">Synopsis</label>
+                <textarea
+                  value={editSynopsis}
+                  onChange={(e) => setEditSynopsis(e.target.value)}
+                  rows={4}
+                  placeholder="Short description shown on the show's detail page"
+                  className="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-[11px] font-semibold text-white/60">
+                    Rating (0–10)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    value={editRating}
+                    onChange={(e) => setEditRating(e.target.value)}
+                    placeholder="8.5"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-semibold text-white/60">
+                    View count
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={editViewCount}
+                    onChange={(e) => setEditViewCount(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none"
+                  />
+                </div>
+              </div>
+
               {/* Current images preview */}
               <div className="flex gap-3">
                 {editShow.poster_url && (
@@ -950,6 +1088,35 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin video preview modal */}
+      {previewFor && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4"
+          onClick={closePreview}
+        >
+          <div
+            className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closePreview}
+              className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex aspect-video items-center justify-center bg-black">
+              {previewLoading && <Loader2 className="h-8 w-8 animate-spin text-white/60" />}
+              {!previewLoading && previewError && (
+                <p className="px-6 text-center text-sm text-[#EF4444]">{previewError}</p>
+              )}
+              {!previewLoading && previewUrl && (
+                <video src={previewUrl} controls autoPlay className="h-full w-full" />
+              )}
             </div>
           </div>
         </div>

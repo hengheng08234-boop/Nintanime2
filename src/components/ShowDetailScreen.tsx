@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Play,
   Star,
+  Eye,
   Plus,
   Calendar,
   Building2,
@@ -58,6 +59,12 @@ export default function ShowDetailScreen({
   const fmtDuration = (mins: number | null) =>
     mins ? `${Math.floor(mins / 60) > 0 ? Math.floor(mins / 60) + 'h ' : ''}${mins % 60}m` : '';
 
+  const fmtViews = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return String(n);
+  };
+
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
       {/* Back bar */}
@@ -110,6 +117,14 @@ export default function ShowDetailScreen({
               <span className="flex items-center gap-1 font-semibold text-[#FFD23F]">
                 <Star className="h-4 w-4 fill-[#FFD23F]" /> {Number(show.rating).toFixed(1)}
               </span>
+              {!!show.view_count && (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-white/30" />
+                  <span className="flex items-center gap-1 text-white/70">
+                    <Eye className="h-4 w-4" /> {fmtViews(show.view_count)}
+                  </span>
+                </>
+              )}
               <span className="h-1 w-1 rounded-full bg-white/30" />
               <span className="flex items-center gap-1 text-white/70">
                 <Calendar className="h-4 w-4" /> {show.release_year ?? '—'}
@@ -217,6 +232,11 @@ export default function ShowDetailScreen({
                         {ep.duration && (
                           <span className="flex items-center gap-1 text-xs text-white/40">
                             <Clock className="h-3 w-3" /> {fmtDuration(ep.duration)}
+                          </span>
+                        )}
+                        {ep.is_free_preview && (
+                          <span className="rounded-full bg-[#22C55E]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#22C55E]">
+                            Free
                           </span>
                         )}
                       </div>
