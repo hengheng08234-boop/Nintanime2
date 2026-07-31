@@ -172,11 +172,17 @@ function App() {
 
   if (screen.name === 'detail') {
     return (
-      <ShowDetailScreen
-        show={screen.show}
-        onBack={() => setScreen({ name: 'home' })}
-        onPlayEpisode={handlePlayEpisode}
-      />
+      <>
+        <ShowDetailScreen
+          show={screen.show}
+          onBack={() => setScreen({ name: 'home' })}
+          onPlayEpisode={handlePlayEpisode}
+          subscribed={isSubscribed(profile) || !!profile?.is_admin}
+        />
+        {showSubModal && (
+          <SubscriptionModal onClose={() => setShowSubModal(false)} />
+        )}
+      </>
     );
   }
 
