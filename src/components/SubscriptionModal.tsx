@@ -261,17 +261,11 @@ export default function SubscriptionModal({ onClose }: Props) {
             <X size={17} />
           </button>
           <div className="relative flex flex-col items-center pt-2 text-center">
-            <div
-              className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl p-2.5"
-              style={{
-                background: 'linear-gradient(145deg, #F3CD82 0%, #E8A94A 45%, #A85D1F 100%)',
-                boxShadow: '0 8px 28px rgba(232,169,74,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset',
-              }}
-            >
+            <div className="mb-3 flex h-24 w-24 items-center justify-center">
               <img
                 src={LOGO_URL}
                 alt="NINT ANIME"
-                className="h-full w-full object-contain"
+                className="h-full w-full object-contain drop-shadow-[0_6px_18px_rgba(232,169,74,0.35)]"
                 onError={(e) => {
                   // Fall back to the crown mark if the logo asset is missing
                   e.currentTarget.style.display = 'none';

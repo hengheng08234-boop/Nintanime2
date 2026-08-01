@@ -285,7 +285,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
       setNewEp({
         episode_number: String(epNumber + 1),
         season: newEp.season,
-        title: '',
+        title: `Episode ${epNumber + 1}`,
         description: '',
         duration: '',
         video_url: '',
@@ -851,7 +851,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                   season: String(
                                     show.episodes[show.episodes.length - 1]?.season ?? 1,
                                   ),
-                                  title: '',
+                                  title: show.type === 'movie' ? '' : `Episode ${nextNumber}`,
                                   description: '',
                                   duration: '',
                                   video_url: '',
