@@ -19,6 +19,8 @@ import ProfileScreen from '@/components/ProfileScreen';
 import WatchlistScreen from '@/components/WatchlistScreen';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import AdminScreen from '@/components/AdminScreen';
+import DesktopBlockedScreen from '@/components/DesktopBlockedScreen';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 type Screen =
   | { name: 'auth'; mode: 'signin' | 'signup' }
@@ -38,6 +40,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [searchOpen, setSearchOpen] = useState(false);
   const [sessionKicked, setSessionKicked] = useState(false);
+  const isMobile = useIsMobile();
+  const isAdmin = !!profile?.is_admin;
 
   const refreshProfile = async (userId: string) => {
     const p = await fetchProfile(userId);
@@ -167,6 +171,34 @@ function App() {
     else if (screen.name === 'watchlist') setActiveTab('watchlist');
     else if (screen.name === 'profile') setActiveTab('account');
   }, [screen.name]);
+
+  if (!authReady) {
+    // Avoid flashing the desktop gate (or the app) before we know whether
+    // this visitor is a signed-in admin.
+    return <div className="min-h-screen bg-[#0A0A0F]" />;
+  }
+
+  // Desktop is admin-only. Everyone else — signed out or a regular signed-in
+  // user — gets a "please use mobile" gate. The gate itself still lets an
+  // admin sign in from desktop via its own button, which opens AuthScreen
+  // through here; once that login resolves, isAdmin flips and this check
+  // falls through to the normal app below.
+  if (!isMobile && !isAdmin) {
+    return (
+      <DesktopBlockedScreen
+        authOpen={screen.name === 'auth'}
+        onOpenAdminSignIn={() => setScreen({ name: 'auth', mode: 'signin' })}
+      >
+        <AuthScreen
+          mode={screen.name === 'auth' ? screen.mode : 'signin'}
+          onBack={() => setScreen({ name: 'home' })}
+          onSuccess={handleAuthSuccess}
+          onSwitch={(mode) => setScreen({ name: 'auth', mode })}
+          kickedOut={sessionKicked}
+        />
+      </DesktopBlockedScreen>
+    );
+  }
 
   if (screen.name === 'auth') {
     return (
