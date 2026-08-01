@@ -50,6 +50,7 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     title: '',
     description: '',
     duration: '',
+    video_url: '',
   });
   const [busy, setBusy] = useState(false);
 
@@ -258,21 +259,38 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
   const handleAddEpisode = async (showId: string, movieTitle?: string) => {
     setBusy(true);
     setError('');
+    const epNumber = movieTitle ? 1 : parseInt(newEp.episode_number) || 1;
     const { error } = await supabase.from('episodes').insert({
       show_id: showId,
-      episode_number: movieTitle ? 1 : parseInt(newEp.episode_number) || 1,
+      episode_number: epNumber,
       season: movieTitle ? 1 : parseInt(newEp.season) || 1,
-      title: movieTitle || newEp.title.trim() || 'Untitled Episode',
+      title: movieTitle || newEp.title.trim() || `Episode ${epNumber}`,
       description: newEp.description.trim() || null,
       duration: newEp.duration ? parseInt(newEp.duration) : null,
+      video_url: newEp.video_url.trim() || null,
     });
     setBusy(false);
     if (error) {
       setError(error.message);
       return;
     }
-    setNewEp({ episode_number: '', season: '1', title: '', description: '', duration: '' });
-    setAddEpOpen(null);
+    if (movieTitle) {
+      // Movies only ever get one slot — close the form like before.
+      setNewEp({ episode_number: '', season: '1', title: '', description: '', duration: '', video_url: '' });
+      setAddEpOpen(null);
+    } else {
+      // Series: keep the form open and bump the episode number so the
+      // admin can immediately paste the next episode's link — fill ep 1,
+      // hit Add, the form clears and jumps to ep 2, paste, Add, ep 3…
+      setNewEp({
+        episode_number: String(epNumber + 1),
+        season: newEp.season,
+        title: '',
+        description: '',
+        duration: '',
+        video_url: '',
+      });
+    }
     await loadShows();
   };
 
@@ -766,6 +784,29 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                 />
                               </div>
                               )}
+                              <div>
+                                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-white/60">
+                                  <Link2 className="h-3 w-3" /> Video URL (optional — paste now or add later)
+                                </label>
+                                <input
+                                  value={newEp.video_url}
+                                  onChange={(e) =>
+                                    setNewEp({ ...newEp, video_url: e.target.value })
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleAddEpisode(
+                                        show.id,
+                                        show.type === 'movie' ? show.title : undefined,
+                                      );
+                                    }
+                                  }}
+                                  placeholder="https://…  (paste link, press Enter or Add to save + jump to next ep)"
+                                  className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none focus:border-[#4CC950]/50"
+                                  autoFocus
+                                />
+                              </div>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() =>
@@ -782,19 +823,41 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                                   ) : (
                                     <Plus className="h-3.5 w-3.5" />
                                   )}
-                                  {show.type === 'movie' ? 'Add Movie Slot' : 'Add Episode'}
+                                  {show.type === 'movie' ? 'Add Movie Slot' : `Add Ep ${newEp.episode_number || ''} & Next`}
                                 </button>
                                 <button
                                   onClick={() => setAddEpOpen(null)}
                                   className="rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/5"
                                 >
-                                  Cancel
+                                  {show.type === 'movie' ? 'Cancel' : 'Done'}
                                 </button>
                               </div>
+                              {show.type !== 'movie' && (
+                                <p className="text-[11px] text-white/35">
+                                  Tip: paste the link, hit Enter — it saves this episode and jumps straight to the next number so you can paste again.
+                                </p>
+                              )}
                             </div>
                           ) : (
                             <button
-                              onClick={() => setAddEpOpen(show.id)}
+                              onClick={() => {
+                                const nextNumber =
+                                  show.episodes.reduce(
+                                    (max, ep) => Math.max(max, ep.episode_number),
+                                    0,
+                                  ) + 1;
+                                setNewEp({
+                                  episode_number: String(nextNumber),
+                                  season: String(
+                                    show.episodes[show.episodes.length - 1]?.season ?? 1,
+                                  ),
+                                  title: '',
+                                  description: '',
+                                  duration: '',
+                                  video_url: '',
+                                });
+                                setAddEpOpen(show.id);
+                              }}
                               className="flex items-center gap-1.5 rounded-lg border border-dashed border-white/20 px-4 py-2.5 text-xs font-semibold text-white/60 transition hover:border-[#4CC950]/40 hover:text-white"
                             >
                               <Plus className="h-3.5 w-3.5" />
