@@ -12,6 +12,15 @@ body,
   height: 100%;
 }
 
+/* Kill pinch-zoom and the double-tap-to-zoom gesture; browsing/scrolling
+   through show rails no longer accidentally triggers a zoom on fast
+   swipes or double-taps (some mobile browsers ignore the viewport meta
+   tag alone, so this is enforced at the CSS layer too). */
+html {
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
 body {
   margin: 0;
   background-color: #0a0a0f;

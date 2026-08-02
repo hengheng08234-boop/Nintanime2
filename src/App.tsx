@@ -132,6 +132,10 @@ function App() {
   };
 
   const handlePlayEpisode = (episode: Episode, show: ShowWithGenres) => {
+    if (!session) {
+      setScreen({ name: 'auth', mode: 'signup' });
+      return;
+    }
     const canOpen = isSubscribed(profile) || profile?.is_admin || episode.is_free_preview;
     if (canOpen) {
       addToContinueWatching(show, episode, episode.episode_number - 1);
