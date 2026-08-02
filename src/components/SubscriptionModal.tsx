@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   X,
   Crown,
-  Clock,
   QrCode,
   Download,
   Upload,
@@ -19,12 +18,17 @@ import {
   Percent,
   Plus,
   Minus,
-  ArrowRight,
   BadgeCheck,
+  Lock,
+  Gift,
+  ImagePlus,
+  XCircle,
+  ArrowLeft,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { useLang } from '@/lib/useLang';
 import { appText } from '@/lib/appTranslations';
+import { verifyReceiptScreenshot, RECEIPT_MATCH_PHRASE } from '@/lib/receiptOcr';
 
 const LOGO_URL = '/assets/images/logo-transparent.png';
 
@@ -51,6 +55,33 @@ const PLAN_QR: Record<PlanKey, string> = {
 };
 
 const ABA_ICON = '/assets/images/aba-mobile-icon.png';
+
+function QrPaymentCard({ qrSrc, amount }: { qrSrc: string; amount: number }) {
+  return (
+    <div className="flex flex-col items-center py-1">
+      <img
+        src={LOGO_URL}
+        alt="NINT ANIME"
+        className="h-16 w-16 object-contain drop-shadow-[0_6px_18px_rgba(232,169,74,0.35)]"
+      />
+      <p
+        className="mt-2 text-sm font-extrabold uppercase tracking-wide text-white"
+        style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.06em' }}
+      >
+        Nint Anime
+      </p>
+      <p className="mt-0.5 text-2xl font-extrabold text-[#E8A94A]">
+        ${amount.toFixed(2)}
+      </p>
+      <img
+        key={qrSrc}
+        src={qrSrc}
+        alt="Payment QR"
+        className="mt-3 h-48 w-48 rounded-2xl bg-white p-2 object-contain"
+      />
+    </div>
+  );
+}
 
 interface Props {
   onClose: () => void;
@@ -91,9 +122,26 @@ export default function SubscriptionModal({ onClose }: Props) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // --- Smart manual flow: pay -> save QR -> notice -> go to ABA -> upload & OCR-verify ---
+  type ManualStep = 'summary' | 'qr' | 'notice' | 'upload' | 'success' | 'failed';
+  const [manualStep, setManualStep] = useState<ManualStep>('summary');
+  const [manualSecondsLeft, setManualSecondsLeft] = useState(600);
+  const manualCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [abaUnlocked, setAbaUnlocked] = useState(false);
+  const abaLockRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrError, setOcrError] = useState('');
+  const manualFileInputRef = useRef<HTMLInputElement>(null);
+
+  const stopManualTimers = () => {
+    if (manualCountdownRef.current) clearInterval(manualCountdownRef.current);
+    if (abaLockRef.current) clearTimeout(abaLockRef.current);
+  };
+
   const stopTimers = () => {
     if (pollRef.current) clearInterval(pollRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current);
+    stopManualTimers();
   };
 
   useEffect(() => stopTimers, []);
@@ -102,7 +150,117 @@ export default function SubscriptionModal({ onClose }: Props) {
     setAutoStatus('idle');
     setAutoQr(null);
     setAutoError('');
+    setManualStep('summary');
+    setAbaUnlocked(false);
+    setOcrError('');
   }, [selected]);
+
+  useEffect(() => {
+    stopManualTimers();
+    setManualStep('summary');
+    setAbaUnlocked(false);
+    setOcrError('');
+  }, [payMode]);
+
+  const handleManualPayClick = () => {
+    setManualStep('qr');
+  };
+
+  const handleManualQrSaved = () => {
+    handleSaveQr();
+    setManualStep('notice');
+    setManualSecondsLeft(600);
+    setAbaUnlocked(false);
+
+    if (manualCountdownRef.current) clearInterval(manualCountdownRef.current);
+    manualCountdownRef.current = setInterval(() => {
+      setManualSecondsLeft((s) => {
+        if (s <= 1) {
+          if (manualCountdownRef.current) clearInterval(manualCountdownRef.current);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+
+    if (abaLockRef.current) clearTimeout(abaLockRef.current);
+    abaLockRef.current = setTimeout(() => setAbaUnlocked(true), 3000);
+  };
+
+  const handleGoToAba = () => {
+    if (!abaUnlocked) return;
+    setManualStep('upload');
+  };
+
+  const handleManualFileSelected = async (file: File) => {
+    setOcrBusy(true);
+    setOcrError('');
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        setOcrError('Not signed in');
+        setOcrBusy(false);
+        return;
+      }
+
+      const { matched, rawText } = await verifyReceiptScreenshot(file);
+
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `subscription-proofs/${userData.user.id}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true });
+      if (uploadError) {
+        setOcrError(uploadError.message);
+        setOcrBusy(false);
+        return;
+      }
+      const { data: pubData } = supabase.storage.from('avatars').getPublicUrl(path);
+      setProofUrl(pubData.publicUrl);
+
+      if (!matched) {
+        setOcrBusy(false);
+        setManualStep('failed');
+        return;
+      }
+
+      const { error: rpcError } = await supabase.rpc('confirm_subscription_via_ocr', {
+        p_plan: selectedPlan.key,
+        p_amount: selectedPlan.price,
+        p_proof_url: pubData.publicUrl,
+        p_ocr_text: rawText,
+        p_bonus_days: 10,
+      });
+
+      setOcrBusy(false);
+      if (rpcError) {
+        setManualStep('failed');
+        return;
+      }
+      setManualStep('success');
+      setSubmitted(true);
+    } catch {
+      setOcrBusy(false);
+      setManualStep('failed');
+    }
+  };
+
+  const handleSendForManualReview = async () => {
+    setBusy(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error: insertError } = await supabase.from('subscription_requests').insert({
+      user_id: userData.user?.id,
+      plan: selectedPlan.key,
+      amount: selectedPlan.price,
+      discount: 0,
+      description: 'Submitted for manual review after OCR mismatch',
+      transaction_id: null,
+      payment_date: new Date().toISOString().slice(0, 10),
+      proof_url: proofUrl,
+    });
+    setBusy(false);
+    if (!insertError) setSubmitted(true);
+  };
 
   const startPolling = (requestId: string) => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -206,6 +364,10 @@ export default function SubscriptionModal({ onClose }: Props) {
 
   const handleConfirmPaid = async () => {
     setError('');
+    if (!transactionId.trim() || !proofUrl) {
+      setError(t.subMissingProof);
+      return;
+    }
     setBusy(true);
     const { data: userData } = await supabase.auth.getUser();
     const { error: insertError } = await supabase
@@ -216,7 +378,7 @@ export default function SubscriptionModal({ onClose }: Props) {
         amount: finalAmount,
         discount: discountVal,
         description: description.trim() || null,
-        transaction_id: transactionId.trim() || null,
+        transaction_id: transactionId.trim(),
         payment_date: paymentDate,
         proof_url: proofUrl,
       });
@@ -455,52 +617,13 @@ export default function SubscriptionModal({ onClose }: Props) {
 
                   {autoStatus === 'waiting' && autoQr && (
                     <>
-                      <div className="mb-3 flex justify-center">
-                        <div className="relative">
-                          <img
-                            src={autoQr.qrImage}
-                            alt="Payment QR"
-                            className="h-44 w-44 rounded-2xl border-2 border-[#E8A94A]/40 bg-white p-2 object-contain"
-                          />
-                          <div className="absolute -inset-1 animate-pulse rounded-2xl border-2 border-[#E8A94A]/30" />
-                        </div>
-                      </div>
-                      <div className="mb-3 flex items-center justify-center gap-1.5">
+                      <QrPaymentCard qrSrc={autoQr.qrImage} amount={selectedPlan.price} />
+                      <div className="mt-2 flex items-center justify-center gap-1.5">
                         <Loader2 size={12} className="animate-spin text-[#E8A94A]" />
                         <p className="text-[10px] font-semibold text-white">
                           {t.subAutoVerifying} ({formatCountdown(secondsLeft)})
                         </p>
                       </div>
-
-                      {/* Prominent ABA Mobile deep link */}
-                      {autoQr.abapayDeeplink && (
-                        <a
-                          href={autoQr.abapayDeeplink}
-                          className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 transition hover:opacity-90"
-                          style={{
-                            background: 'linear-gradient(135deg, #14707F 0%, #0C5261 100%)',
-                            boxShadow: '0 6px 18px rgba(15,95,123,0.35)',
-                          }}
-                        >
-                          <img
-                            src={ABA_ICON}
-                            alt="ABA Mobile"
-                            className="h-9 w-9 rounded-[9px] object-cover"
-                          />
-                          <span className="flex-1 text-left">
-                            <span className="block text-[12px] font-bold text-white">
-                              {t.subOpenAba}
-                            </span>
-                            <span className="block text-[9.5px] text-white/70">
-                              {t.subPayOneTap}
-                            </span>
-                          </span>
-                          <ArrowRight size={16} className="text-white/80" />
-                        </a>
-                      )}
-                      <p className="text-center text-[9.5px] text-white/35">
-                        {t.subAlreadyPaidHint}
-                      </p>
                     </>
                   )}
 
@@ -536,172 +659,191 @@ export default function SubscriptionModal({ onClose }: Props) {
                 </div>
               )}
 
-              {/* MANUAL PAY */}
+              {/* MANUAL PAY — smart step-by-step flow */}
               {payMode === 'manual' && (
                 <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                  <div className="mb-3 flex items-center justify-center gap-1.5">
-                    <QrCode size={14} className="text-[#FF4D5E]" />
-                    <p className="text-[11px] font-bold text-white">Scan to Pay</p>
-                  </div>
-                  <div className="mb-3 flex justify-center">
-                    <img
-                      key={selected}
-                      src={PLAN_QR[selected]}
-                      alt="Payment QR"
-                      className="h-40 w-40 rounded-2xl border-2 border-[#FF4D5E]/30 bg-white p-2 object-contain"
-                    />
-                  </div>
-
-                  <div className="mb-1.5 grid grid-cols-2 gap-2">
-                    <button
-                      onClick={handleSaveQr}
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
-                    >
-                      <Download size={13} />
-                      {t.subSaveQr}
-                    </button>
-                    <input
-                      ref={proofInputRef}
-                      type="file"
-                      accept="image/*"
-                      disabled={proofUploading}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleProofUpload(file);
-                      }}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => proofInputRef.current?.click()}
-                      disabled={proofUploading}
-                      className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-                      style={{
-                        backgroundColor: proofUrl ? '#22C55E' : '#FF4D5E',
-                      }}
-                    >
-                      {proofUploading ? (
-                        t.subUploadingProof
-                      ) : proofUrl ? (
-                        <>
-                          <CheckCircle2 size={13} />
-                          {t.subVerified}
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={13} />
-                          {t.subUploadProof}
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Payment details accordion */}
-                  <div className="mt-2 overflow-hidden rounded-xl border border-white/10">
-                    <button
-                      onClick={() =>
-                        showDetails ? setShowDetails(false) : openDetails()
-                      }
-                      className="flex w-full items-center justify-between px-3 py-2.5"
-                    >
-                      <span className="text-[11px] font-bold text-white">
-                        {t.subPaymentDetails}
-                      </span>
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
-                        {showDetails ? (
-                          <Minus size={14} className="text-white" />
-                        ) : (
-                          <Plus size={14} className="text-white" />
-                        )}
-                      </span>
-                    </button>
-
-                    {showDetails && (
-                      <div
-                        className="space-y-2.5 px-3 pb-3"
-                        style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+                  {/* Step 1: summary + Pay button */}
+                  {manualStep === 'summary' && (
+                    <div className="text-center">
+                      <div className="mb-2 flex items-center justify-center gap-1.5">
+                        <QrCode size={14} className="text-[#FF4D5E]" />
+                        <p className="text-[11px] font-bold text-white">{t.subScanToPay}</p>
+                      </div>
+                      <p className="mb-3 text-2xl font-extrabold text-white">
+                        ${selectedPlan.price.toFixed(2)}
+                      </p>
+                      <button
+                        onClick={handleManualPayClick}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-white transition hover:opacity-90"
+                        style={{ background: 'linear-gradient(90deg,#FF4D5E,#C92B3B)' }}
                       >
-                        <div className="pt-2.5">
-                          <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                            <Calendar size={12} /> {t.subPaymentDate}
-                          </label>
-                          <input
-                            type="date"
-                            value={paymentDate}
-                            onChange={(e) => setPaymentDate(e.target.value)}
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                              <DollarSign size={12} /> {t.subAmountPaid}
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={amountPaid}
-                              onChange={(e) => setAmountPaid(e.target.value)}
-                              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                              <Percent size={12} /> {t.subDiscount}
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={discount}
-                              onChange={(e) => setDiscount(e.target.value)}
-                              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                            <FileText size={12} /> {t.subDescription}
-                          </label>
-                          <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={2}
-                            placeholder={t.subDescriptionPlaceholder}
-                            className="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-white/70">
-                            <Hash size={12} /> {t.subTransactionId}
-                          </label>
-                          <input
-                            value={transactionId}
-                            onChange={(e) => setTransactionId(e.target.value)}
-                            placeholder={t.subTransactionPlaceholder}
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white outline-none"
-                          />
-                        </div>
-                        <div
-                          className="flex justify-between pt-1 text-[11px]"
-                          style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
-                        >
-                          <span className="text-white/50">{t.subTotalDue}</span>
-                          <span className="font-extrabold text-[#FF4D5E]">
-                            ${finalAmount.toFixed(2)}
-                          </span>
-                        </div>
-                        {error && (
-                          <p className="text-center text-xs text-[#EF4444]">{error}</p>
-                        )}
+                        <DollarSign size={14} />
+                        {t.subPayNow}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 2: KHQR + save */}
+                  {manualStep === 'qr' && (
+                    <div>
+                      <div className="mb-2 flex items-center justify-center gap-1.5">
+                        <QrCode size={14} className="text-[#FF4D5E]" />
+                        <p className="text-[11px] font-bold text-white">{t.subStep2Title}</p>
+                      </div>
+                      <p className="mb-2 px-2 text-center text-[10px] leading-relaxed text-white/50">
+                        {t.subStep2Desc}
+                      </p>
+                      <QrPaymentCard qrSrc={PLAN_QR[selected]} amount={selectedPlan.price} />
+                      <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
-                          onClick={handleConfirmPaid}
-                          disabled={busy}
-                          className="w-full rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                          onClick={handleSaveQr}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
                         >
-                          {busy ? t.subSending : t.subConfirmPaid}
+                          <Download size={13} />
+                          {t.subSaveQr}
+                        </button>
+                        <button
+                          onClick={handleManualQrSaved}
+                          className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
+                          style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                        >
+                          <CheckCircle2 size={13} />
+                          {t.subIveSavedQr}
                         </button>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: notice + countdown + locked "go to ABA" button */}
+                  {manualStep === 'notice' && (
+                    <div>
+                      <div
+                        className="rounded-xl p-3"
+                        style={{
+                          border: '1px solid rgba(232,169,74,0.25)',
+                          background: 'rgba(232,169,74,0.06)',
+                        }}
+                      >
+                        <div className="mb-1.5 flex items-center gap-1.5">
+                          <Gift size={13} className="text-[#E8A94A]" />
+                          <p className="text-[11px] font-bold text-white">{t.subNoticeTitle}</p>
+                        </div>
+                        <p className="text-[10.5px] leading-relaxed text-white/60">
+                          {t.subNoticeBody}
+                        </p>
+                        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#E8A94A]/15 px-2.5 py-1 text-[9.5px] font-bold text-[#E8A94A]">
+                          <Sparkles size={10} />
+                          {t.subBonusBadge}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-center gap-1.5">
+                        <Loader2 size={12} className="animate-spin text-[#E8A94A]" />
+                        <p className="text-[10px] font-semibold text-white">
+                          {t.subCheckingPayment} ({formatCountdown(manualSecondsLeft)})
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={handleGoToAba}
+                        disabled={!abaUnlocked}
+                        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-black transition disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                      >
+                        {abaUnlocked ? <ImagePlus size={14} /> : <Lock size={13} />}
+                        {t.subGoToAba}
+                      </button>
+                      {!abaUnlocked && (
+                        <p className="mt-1.5 text-center text-[9.5px] text-white/35">
+                          {t.subGoToAbaHint}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Step 4: upload & OCR-verify */}
+                  {manualStep === 'upload' && (
+                    <div className="text-center">
+                      <div className="mb-1.5 flex items-center justify-center gap-1.5">
+                        <Upload size={14} className="text-[#FF4D5E]" />
+                        <p className="text-[11px] font-bold text-white">
+                          {t.subUploadReceiptTitle}
+                        </p>
+                      </div>
+                      <p className="mb-3 px-2 text-[10px] leading-relaxed text-white/50">
+                        {t.subUploadReceiptDesc}
+                      </p>
+                      <input
+                        ref={manualFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        disabled={ocrBusy}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleManualFileSelected(file);
+                        }}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => manualFileInputRef.current?.click()}
+                        disabled={ocrBusy}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                        style={{ background: 'linear-gradient(90deg,#FF4D5E,#C92B3B)' }}
+                      >
+                        {ocrBusy ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            {t.subReadingImage}
+                          </>
+                        ) : (
+                          <>
+                            <ImagePlus size={14} />
+                            {t.subChooseScreenshot}
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setManualStep('notice')}
+                        className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-white/40 hover:text-white/60"
+                      >
+                        <ArrowLeft size={11} />
+                        {t.subBackBtn}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 5a: OCR match failed */}
+                  {manualStep === 'failed' && (
+                    <div className="py-1 text-center">
+                      <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EF4444]/15">
+                        <XCircle size={28} className="text-[#EF4444]" />
+                      </div>
+                      <p className="text-[12px] font-bold text-white">{t.subVerifyFailed}</p>
+                      <p className="mt-1.5 px-3 text-[10.5px] leading-relaxed text-white/50">
+                        {t.subVerifyFailedDesc}
+                      </p>
+                      {ocrError && (
+                        <p className="mt-1 text-[10px] text-[#EF4444]">{ocrError}</p>
+                      )}
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        <button
+                          onClick={() => setManualStep('upload')}
+                          className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
+                          style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                        >
+                          <RefreshCw size={13} />
+                          {t.subRetryUpload}
+                        </button>
+                        <button
+                          onClick={handleSendForManualReview}
+                          disabled={busy || !proofUrl}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5 disabled:opacity-50"
+                        >
+                          {busy ? t.subSending : t.subSendForReview}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -713,46 +855,56 @@ export default function SubscriptionModal({ onClose }: Props) {
               </div>
             </>
           ) : (
-            <div className="py-8 text-center">
-              <div
-                className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full"
-                style={{
-                  background:
-                    autoStatus === 'confirmed'
-                      ? 'radial-gradient(circle, rgba(232,169,74,0.25) 0%, rgba(34,197,94,0.08) 70%)'
-                      : 'rgba(255,77,94,0.15)',
-                }}
-              >
-                <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-full ${
-                    autoStatus === 'confirmed' ? 'bg-[#22C55E]/20' : 'bg-[#FF4D5E]/15'
-                  }`}
-                >
-                  <CheckCircle2
-                    size={32}
-                    className={
-                      autoStatus === 'confirmed' ? 'text-[#22C55E]' : 'text-[#FF4D5E]'
-                    }
-                  />
+            (() => {
+              const isConfirmed = autoStatus === 'confirmed' || manualStep === 'success';
+              return (
+                <div className="py-8 text-center">
+                  <div
+                    className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full"
+                    style={{
+                      background: isConfirmed
+                        ? 'radial-gradient(circle, rgba(232,169,74,0.25) 0%, rgba(34,197,94,0.08) 70%)'
+                        : 'rgba(255,77,94,0.15)',
+                    }}
+                  >
+                    <div
+                      className={`flex h-14 w-14 items-center justify-center rounded-full ${
+                        isConfirmed ? 'bg-[#22C55E]/20' : 'bg-[#FF4D5E]/15'
+                      }`}
+                    >
+                      <CheckCircle2
+                        size={32}
+                        className={isConfirmed ? 'text-[#22C55E]' : 'text-[#FF4D5E]'}
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white">
+                    {isConfirmed && (
+                      <Crown size={15} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
+                    )}
+                    {manualStep === 'success'
+                      ? t.subVerifySuccessTitle
+                      : isConfirmed
+                        ? t.subYourePremium
+                        : t.subRequestReceived}
+                  </p>
+                  <p className="mt-1.5 px-6 text-xs leading-relaxed text-white/50">
+                    {manualStep === 'success'
+                      ? t.subVerifySuccessDesc
+                      : isConfirmed
+                        ? t.subConfirmedDesc
+                        : t.subPendingDesc}
+                  </p>
+                  <button
+                    onClick={onClose}
+                    className="mt-4 rounded-xl px-6 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
+                    style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                  >
+                    {isConfirmed ? t.subStartWatching : t.subCloseBtn}
+                  </button>
                 </div>
-              </div>
-              <p className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white">
-                {autoStatus === 'confirmed' && (
-                  <Crown size={15} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
-                )}
-                {autoStatus === 'confirmed' ? t.subYourePremium : t.subRequestReceived}
-              </p>
-              <p className="mt-1.5 px-6 text-xs leading-relaxed text-white/50">
-                {autoStatus === 'confirmed' ? t.subConfirmedDesc : t.subPendingDesc}
-              </p>
-              <button
-                onClick={onClose}
-                className="mt-4 rounded-xl px-6 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-              >
-                {autoStatus === 'confirmed' ? t.subStartWatching : t.subCloseBtn}
-              </button>
-            </div>
+              );
+            })()
           )}
         </div>
       </div>
