@@ -120,7 +120,7 @@ export default function AuthScreen({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 12% -5%, rgba(201,122,46,0.22) 0%, rgba(10,10,15,0) 48%), radial-gradient(circle at 88% 105%, rgba(255,77,94,0.18) 0%, rgba(10,10,15,0) 52%)',
+            'radial-gradient(circle at 12% -5%, rgba(201,122,46,0.22) 0%, rgba(10,10,15,0) 48%), radial-gradient(circle at 88% 105%, rgba(15,143,114,0.18) 0%, rgba(10,10,15,0) 52%)',
         }}
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0A0A0F]/55 via-[#0A0A0F]/80 to-[#0A0A0F]" />
@@ -138,7 +138,7 @@ export default function AuthScreen({
             <img
               src="/assets/images/logo-transparent.png"
               alt="NINT ANIME"
-              className="h-8 w-8 drop-shadow-[0_0_14px_rgba(255,77,94,0.5)]"
+              className="h-8 w-8 drop-shadow-[0_0_14px_rgba(15,143,114,0.5)]"
             />
             <span
               className="text-lg font-black tracking-wider"
@@ -213,7 +213,7 @@ export default function AuthScreen({
               className="rounded-[26px] p-[1px] shadow-[0_30px_70px_rgba(0,0,0,0.55)]"
               style={{
                 background:
-                  'linear-gradient(160deg, rgba(255,210,120,0.35), rgba(255,255,255,0.06) 30%, rgba(255,77,94,0.18) 100%)',
+                  'linear-gradient(160deg, rgba(255,210,120,0.35), rgba(255,255,255,0.06) 30%, rgba(15,143,114,0.18) 100%)',
               }}
             >
               <form

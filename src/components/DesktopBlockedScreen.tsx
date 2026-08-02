@@ -29,7 +29,7 @@ export default function DesktopBlockedScreen({
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0A0A0F] px-6 text-white">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#FF4D5E]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#0F8F72]/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-[#E8A94A]/10 blur-3xl" />
 
       <div className="relative w-full max-w-sm rounded-[28px] border border-white/10 bg-[#111117]/90 p-8 text-center backdrop-blur-xl">

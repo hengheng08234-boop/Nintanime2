@@ -122,11 +122,9 @@ export default function SubscriptionModal({ onClose }: Props) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // --- Smart manual flow: pay -> save QR -> notice -> go to ABA -> upload & OCR-verify ---
+  // --- Smart manual flow: pay -> real sandbox QR -> notice -> go to ABA -> upload & OCR bonus ---
   type ManualStep = 'summary' | 'qr' | 'notice' | 'upload' | 'success' | 'failed';
   const [manualStep, setManualStep] = useState<ManualStep>('summary');
-  const [manualSecondsLeft, setManualSecondsLeft] = useState(600);
-  const manualCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [abaUnlocked, setAbaUnlocked] = useState(false);
   const abaLockRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [ocrBusy, setOcrBusy] = useState(false);
@@ -134,7 +132,6 @@ export default function SubscriptionModal({ onClose }: Props) {
   const manualFileInputRef = useRef<HTMLInputElement>(null);
 
   const stopManualTimers = () => {
-    if (manualCountdownRef.current) clearInterval(manualCountdownRef.current);
     if (abaLockRef.current) clearTimeout(abaLockRef.current);
   };
 
@@ -162,26 +159,15 @@ export default function SubscriptionModal({ onClose }: Props) {
     setOcrError('');
   }, [payMode]);
 
-  const handleManualPayClick = () => {
+  const handleManualPayClick = async () => {
     setManualStep('qr');
+    await handleGenerateAutoQr();
   };
 
   const handleManualQrSaved = () => {
     handleSaveQr();
     setManualStep('notice');
-    setManualSecondsLeft(600);
     setAbaUnlocked(false);
-
-    if (manualCountdownRef.current) clearInterval(manualCountdownRef.current);
-    manualCountdownRef.current = setInterval(() => {
-      setManualSecondsLeft((s) => {
-        if (s <= 1) {
-          if (manualCountdownRef.current) clearInterval(manualCountdownRef.current);
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
 
     if (abaLockRef.current) clearTimeout(abaLockRef.current);
     abaLockRef.current = setTimeout(() => setAbaUnlocked(true), 3000);
@@ -189,6 +175,9 @@ export default function SubscriptionModal({ onClose }: Props) {
 
   const handleGoToAba = () => {
     if (!abaUnlocked) return;
+    if (autoQr?.abapayDeeplink) {
+      window.location.href = autoQr.abapayDeeplink;
+    }
     setManualStep('upload');
   };
 
@@ -224,6 +213,16 @@ export default function SubscriptionModal({ onClose }: Props) {
         return;
       }
 
+      // The real sandbox payment may already have auto-confirmed via polling
+      // while the user was uploading — don't double-confirm in that case.
+      if (autoStatus === 'confirmed') {
+        stopTimers();
+        setOcrBusy(false);
+        setManualStep('success');
+        setSubmitted(true);
+        return;
+      }
+
       const { error: rpcError } = await supabase.rpc('confirm_subscription_via_ocr', {
         p_plan: selectedPlan.key,
         p_amount: selectedPlan.price,
@@ -237,6 +236,7 @@ export default function SubscriptionModal({ onClose }: Props) {
         setManualStep('failed');
         return;
       }
+      stopTimers();
       setManualStep('success');
       setSubmitted(true);
     } catch {
@@ -355,7 +355,7 @@ export default function SubscriptionModal({ onClose }: Props) {
 
   const handleSaveQr = () => {
     const a = document.createElement('a');
-    a.href = PLAN_QR[selected];
+    a.href = autoQr?.qrImage || PLAN_QR[selected];
     a.download = `nint-anime-payment-qr-${selected}.png`;
     document.body.appendChild(a);
     a.click();
@@ -402,7 +402,7 @@ export default function SubscriptionModal({ onClose }: Props) {
           background: '#101018',
           border: '1px solid rgba(232,169,74,0.18)',
           boxShadow:
-            '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), 0 0 60px rgba(255,77,94,0.08)',
+            '0 30px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), 0 0 60px rgba(15,143,114,0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -415,7 +415,7 @@ export default function SubscriptionModal({ onClose }: Props) {
           }}
         >
           <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#E8A94A]/10 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#FF4D5E]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 top-10 h-32 w-32 rounded-full bg-[#0F8F72]/15 blur-3xl" />
           <button
             onClick={onClose}
             className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
@@ -468,7 +468,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                           ? '1.5px solid #E8A94A'
                           : '1.5px solid rgba(255,255,255,0.08)',
                         background: isSelected
-                          ? 'linear-gradient(160deg, rgba(232,169,74,0.14) 0%, rgba(255,77,94,0.08) 100%)'
+                          ? 'linear-gradient(160deg, rgba(232,169,74,0.14) 0%, rgba(15,143,114,0.08) 100%)'
                           : 'rgba(255,255,255,0.02)',
                         transform: isSelected ? 'translateY(-2px)' : 'none',
                         boxShadow: isSelected
@@ -492,7 +492,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       </p>
                       <p
                         className="mt-0.5 text-xl font-extrabold"
-                        style={{ color: isSelected ? '#E8A94A' : '#FF4D5E' }}
+                        style={{ color: isSelected ? '#E8A94A' : '#0F8F72' }}
                       >
                         ${p.price}
                       </p>
@@ -515,7 +515,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div className="flex items-center gap-2.5">
                   <div
                     className="flex h-9 w-9 items-center justify-center rounded-xl"
-                    style={{ background: 'linear-gradient(145deg,#FF6B7A,#E63946)' }}
+                    style={{ background: 'linear-gradient(145deg,#3FD8B0,#0B6E58)' }}
                   >
                     <DollarSign size={16} className="text-white" />
                   </div>
@@ -551,7 +551,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   onClick={() => setPayMode('manual')}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all ${
                     payMode === 'manual'
-                      ? 'bg-[#FF4D5E] text-white'
+                      ? 'bg-[#0F8F72] text-white'
                       : 'text-white/50'
                   }`}
                 >
@@ -666,7 +666,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {manualStep === 'summary' && (
                     <div className="text-center">
                       <div className="mb-2 flex items-center justify-center gap-1.5">
-                        <QrCode size={14} className="text-[#FF4D5E]" />
+                        <QrCode size={14} className="text-[#0F8F72]" />
                         <p className="text-[11px] font-bold text-white">{t.subScanToPay}</p>
                       </div>
                       <p className="mb-3 text-2xl font-extrabold text-white">
@@ -675,7 +675,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <button
                         onClick={handleManualPayClick}
                         className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-white transition hover:opacity-90"
-                        style={{ background: 'linear-gradient(90deg,#FF4D5E,#C92B3B)' }}
+                        style={{ background: 'linear-gradient(90deg,#0F8F72,#0B6E58)' }}
                       >
                         <DollarSign size={14} />
                         {t.subPayNow}
@@ -683,38 +683,64 @@ export default function SubscriptionModal({ onClose }: Props) {
                     </div>
                   )}
 
-                  {/* Step 2: KHQR + save */}
+                  {/* Step 2: real sandbox KHQR + save */}
                   {manualStep === 'qr' && (
                     <div>
                       <div className="mb-2 flex items-center justify-center gap-1.5">
-                        <QrCode size={14} className="text-[#FF4D5E]" />
+                        <QrCode size={14} className="text-[#0F8F72]" />
                         <p className="text-[11px] font-bold text-white">{t.subStep2Title}</p>
                       </div>
                       <p className="mb-2 px-2 text-center text-[10px] leading-relaxed text-white/50">
                         {t.subStep2Desc}
                       </p>
-                      <QrPaymentCard qrSrc={PLAN_QR[selected]} amount={selectedPlan.price} />
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button
-                          onClick={handleSaveQr}
-                          className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
-                        >
-                          <Download size={13} />
-                          {t.subSaveQr}
-                        </button>
-                        <button
-                          onClick={handleManualQrSaved}
-                          className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
-                          style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-                        >
-                          <CheckCircle2 size={13} />
-                          {t.subIveSavedQr}
-                        </button>
-                      </div>
+
+                      {autoStatus === 'loading' && (
+                        <div className="mx-auto flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10">
+                          <Loader2 size={28} className="animate-spin text-[#E8A94A]" />
+                          <p className="text-[10px] text-white/50">{t.subGeneratingQr}</p>
+                        </div>
+                      )}
+
+                      {autoStatus === 'error' && (
+                        <div className="py-2 text-center">
+                          <p className="mb-3 text-[11px] text-[#EF4444]">{autoError}</p>
+                          <button
+                            onClick={handleManualPayClick}
+                            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
+                            style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                          >
+                            <RefreshCw size={13} />
+                            {t.subTryAgain}
+                          </button>
+                        </div>
+                      )}
+
+                      {autoQr && (autoStatus === 'waiting' || autoStatus === 'confirmed') && (
+                        <>
+                          <QrPaymentCard qrSrc={autoQr.qrImage} amount={selectedPlan.price} />
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <button
+                              onClick={handleSaveQr}
+                              className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                            >
+                              <Download size={13} />
+                              {t.subSaveQr}
+                            </button>
+                            <button
+                              onClick={handleManualQrSaved}
+                              className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
+                              style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                            >
+                              <CheckCircle2 size={13} />
+                              {t.subIveSavedQr}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
-                  {/* Step 3: notice + countdown + locked "go to ABA" button */}
+                  {/* Step 3: notice + real countdown (Payway is auto-verifying in the background) + locked "go to ABA" button */}
                   {manualStep === 'notice' && (
                     <div>
                       <div
@@ -740,7 +766,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                       <div className="mt-3 flex items-center justify-center gap-1.5">
                         <Loader2 size={12} className="animate-spin text-[#E8A94A]" />
                         <p className="text-[10px] font-semibold text-white">
-                          {t.subCheckingPayment} ({formatCountdown(manualSecondsLeft)})
+                          {t.subCheckingPayment} ({formatCountdown(secondsLeft)})
                         </p>
                       </div>
 
@@ -765,7 +791,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   {manualStep === 'upload' && (
                     <div className="text-center">
                       <div className="mb-1.5 flex items-center justify-center gap-1.5">
-                        <Upload size={14} className="text-[#FF4D5E]" />
+                        <Upload size={14} className="text-[#0F8F72]" />
                         <p className="text-[11px] font-bold text-white">
                           {t.subUploadReceiptTitle}
                         </p>
@@ -788,7 +814,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                         onClick={() => manualFileInputRef.current?.click()}
                         disabled={ocrBusy}
                         className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-60"
-                        style={{ background: 'linear-gradient(90deg,#FF4D5E,#C92B3B)' }}
+                        style={{ background: 'linear-gradient(90deg,#0F8F72,#0B6E58)' }}
                       >
                         {ocrBusy ? (
                           <>
@@ -864,17 +890,17 @@ export default function SubscriptionModal({ onClose }: Props) {
                     style={{
                       background: isConfirmed
                         ? 'radial-gradient(circle, rgba(232,169,74,0.25) 0%, rgba(34,197,94,0.08) 70%)'
-                        : 'rgba(255,77,94,0.15)',
+                        : 'rgba(15,143,114,0.15)',
                     }}
                   >
                     <div
                       className={`flex h-14 w-14 items-center justify-center rounded-full ${
-                        isConfirmed ? 'bg-[#22C55E]/20' : 'bg-[#FF4D5E]/15'
+                        isConfirmed ? 'bg-[#22C55E]/20' : 'bg-[#0F8F72]/15'
                       }`}
                     >
                       <CheckCircle2
                         size={32}
-                        className={isConfirmed ? 'text-[#22C55E]' : 'text-[#FF4D5E]'}
+                        className={isConfirmed ? 'text-[#22C55E]' : 'text-[#0F8F72]'}
                       />
                     </div>
                   </div>

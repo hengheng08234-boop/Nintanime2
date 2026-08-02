@@ -17,16 +17,6 @@ export default function LanguageSwitcher({ lang, onChange, className = '' }: Lan
       <Globe className="ml-2 h-3.5 w-3.5 text-white/40" />
       <button
         type="button"
-        onClick={() => onChange('en')}
-        aria-pressed={lang === 'en'}
-        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-          lang === 'en' ? 'bg-[#4CC950] text-black' : 'text-white/60 hover:text-white'
-        }`}
-      >
-        English
-      </button>
-      <button
-        type="button"
         onClick={() => onChange('km')}
         aria-pressed={lang === 'km'}
         className={`rounded-full px-3 py-1 text-xs font-semibold transition font-khmer ${
@@ -34,6 +24,16 @@ export default function LanguageSwitcher({ lang, onChange, className = '' }: Lan
         }`}
       >
         ខ្មែរ
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('en')}
+        aria-pressed={lang === 'en'}
+        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+          lang === 'en' ? 'bg-[#4CC950] text-black' : 'text-white/60 hover:text-white'
+        }`}
+      >
+        English
       </button>
     </div>
   );

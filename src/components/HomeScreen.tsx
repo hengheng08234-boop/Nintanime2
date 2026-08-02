@@ -11,6 +11,8 @@ import {
   Crown,
   Home as HomeIcon,
   Bookmark,
+  Unlock,
+  Sparkles,
   X,
 } from 'lucide-react';
 import type { Show, ShowWithGenres, Genre } from '@/lib/types';
@@ -59,6 +61,7 @@ export default function HomeScreen({
   const [heroIndex, setHeroIndex] = useState(0);
   const [query, setQuery] = useState('');
   const [interacting, setInteracting] = useState(false);
+  const [viewAll, setViewAll] = useState<{ title: string; shows: Show[] } | null>(null);
 
   const touchStartX = useRef(0);
   const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -133,6 +136,10 @@ export default function HomeScreen({
     : shows;
 
   const trending = [...shows].sort((a, b) => b.rating - a.rating).slice(0, 10);
+  const freeShows = shows.filter((s) => s.is_free);
+  const newReleases = [...shows]
+    .sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+    .slice(0, 10);
 
   const showsByGenre = useCallback(
     (slug: string) => shows.filter((s) => s.genres?.some((g) => g.slug === slug)),
@@ -143,7 +150,7 @@ export default function HomeScreen({
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0A0A0F]">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-[#FF4D5E]" />
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-[#0F8F72]" />
           <p className="text-sm text-white/50">{t.loadingLibrary}</p>
         </div>
       </div>
@@ -154,7 +161,7 @@ export default function HomeScreen({
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0A0A0F] px-6">
         <div className="max-w-md text-center">
-          <p className="text-lg font-semibold text-[#FF4D5E]">{t.somethingWrong}</p>
+          <p className="text-lg font-semibold text-[#0F8F72]">{t.somethingWrong}</p>
           <p className="mt-2 text-sm text-white/60">{error}</p>
         </div>
       </div>
@@ -165,8 +172,22 @@ export default function HomeScreen({
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
-      {/* Compact header — slim row: logo + tagline on left, controls on right */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-[#0A0A0F]/85 backdrop-blur-md">
+      {/* Header — floats transparently over the hero cover; only turns solid
+          when there's no hero behind it (e.g. search results) */}
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+          heroVisible ? 'bg-transparent' : 'bg-[#0A0A0F]/85 backdrop-blur-md'
+        }`}
+      >
+        {heroVisible && (
+          <div
+            className="pointer-events-none absolute inset-0 -z-10"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(10,10,15,0.75) 0%, rgba(10,10,15,0.15) 75%, rgba(10,10,15,0) 100%)',
+            }}
+          />
+        )}
         <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-8 sm:py-3.5">
           {/* Logo mark + wordmark + tagline */}
           <button
@@ -179,7 +200,7 @@ export default function HomeScreen({
             <img
               src="/assets/images/logo-transparent.png"
               alt="NINT ANIME"
-              className="h-9 w-9 drop-shadow-[0_0_14px_rgba(255,77,94,0.45)]"
+              className="h-9 w-9 drop-shadow-[0_0_14px_rgba(15,143,114,0.45)]"
             />
             <div className="flex flex-col leading-none">
               <span
@@ -196,10 +217,10 @@ export default function HomeScreen({
 
           {/* Desktop nav links */}
           <nav className="ml-4 hidden items-center gap-5 text-sm font-medium text-white/70 md:flex">
-            <span className="cursor-pointer text-white transition hover:text-[#FF4D5E]">{t.navHome}</span>
-            <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navSeries}</span>
-            <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navMovies}</span>
-            <span className="cursor-pointer transition hover:text-[#FF4D5E]">{t.navMyList}</span>
+            <span className="cursor-pointer text-white transition hover:text-[#0F8F72]">{t.navHome}</span>
+            <span className="cursor-pointer transition hover:text-[#0F8F72]">{t.navSeries}</span>
+            <span className="cursor-pointer transition hover:text-[#0F8F72]">{t.navMovies}</span>
+            <span className="cursor-pointer transition hover:text-[#0F8F72]">{t.navMyList}</span>
           </nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -210,7 +231,7 @@ export default function HomeScreen({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t.searchPlaceholder}
-                className="w-48 rounded-full border border-white/10 bg-white/[0.04] py-2 pl-9 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:w-64 focus:border-[#FF4D5E]/50 focus:bg-white/[0.07]"
+                className="w-48 rounded-full border border-white/10 bg-white/[0.04] py-2 pl-9 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:w-64 focus:border-[#0F8F72]/50 focus:bg-white/[0.07]"
               />
             </div>
             {/* Language switcher — visible on all screens */}
@@ -226,7 +247,7 @@ export default function HomeScreen({
             {/* Profile avatar — desktop only, mobile uses bottom nav */}
             <button
               onClick={onOpenProfile}
-              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF4D5E] to-[#E8A94A] ring-2 ring-white/10 transition hover:ring-[#FF4D5E]/50 sm:flex"
+              className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#0F8F72] to-[#E8A94A] ring-2 ring-white/10 transition hover:ring-[#0F8F72]/50 sm:flex"
               aria-label="Open profile"
             >
               {avatarUrl ? (
@@ -264,7 +285,25 @@ export default function HomeScreen({
 
       {/* Content rows */}
       <main className="mx-auto max-w-[1400px] px-4 pb-28 sm:px-8 sm:pb-20">
-        {query.trim() ? (
+        {viewAll ? (
+          <section className="pt-28">
+            <div className="mb-5 flex items-center gap-3">
+              <button
+                onClick={() => setViewAll(null)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-white/10"
+                aria-label="Back"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-xl font-bold">{viewAll.title}</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {viewAll.shows.map((s) => (
+                <ShowCard key={s.id} show={s} onClick={onSelectShow} />
+              ))}
+            </div>
+          </section>
+        ) : query.trim() ? (
           <section className="pt-28">
             <h2 className="mb-5 text-xl font-bold">
               {t.resultsFor} &ldquo;{query}&rdquo;{' '}
@@ -282,18 +321,41 @@ export default function HomeScreen({
           </section>
         ) : (
           <div className={heroVisible ? 'pt-2' : 'pt-28'}>
+            {freeShows.length > 0 && (
+              <RailRow
+                icon={<Unlock className="h-5 w-5 text-[#22C55E]" />}
+                title={t.freeWatching}
+                shows={freeShows}
+                onSelectShow={onSelectShow}
+                onViewAll={() => setViewAll({ title: t.freeWatching, shows: freeShows })}
+                viewAllLabel={t.viewAll}
+              />
+            )}
             <RailRow
-              icon={<TrendingUp className="h-5 w-5 text-[#FF4D5E]" />}
+              icon={<TrendingUp className="h-5 w-5 text-[#0F8F72]" />}
               title={t.trendingNow}
               shows={trending}
               onSelectShow={onSelectShow}
+              onViewAll={() => setViewAll({ title: t.trendingNow, shows: trending })}
+              viewAllLabel={t.viewAll}
+            />
+            <RailRow
+              icon={<Sparkles className="h-5 w-5 text-[#0F8F72]" />}
+              title={t.newRelease}
+              shows={newReleases}
+              onSelectShow={onSelectShow}
+              onViewAll={() => setViewAll({ title: t.newRelease, shows: newReleases })}
+              viewAllLabel={t.viewAll}
             />
             <RailRow
               icon={<Flame className="h-5 w-5 text-[#E8A94A]" />}
               title={t.popularSeason}
               shows={shows.slice(0, 10)}
               onSelectShow={onSelectShow}
+              onViewAll={() => setViewAll({ title: t.popularSeason, shows })}
+              viewAllLabel={t.viewAll}
             />
+
             {genres.map((g) => {
               const list = showsByGenre(g.slug);
               if (list.length === 0) return null;
@@ -477,7 +539,7 @@ function CoverflowHero({
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 85% 65% at 50% 22%, rgba(201,122,46,0.22) 0%, rgba(10,10,15,0) 62%), radial-gradient(ellipse 65% 55% at 72% 82%, rgba(255,77,94,0.20) 0%, rgba(10,10,15,0) 58%)',
+              'radial-gradient(ellipse 85% 65% at 50% 22%, rgba(201,122,46,0.22) 0%, rgba(10,10,15,0) 62%), radial-gradient(ellipse 65% 55% at 72% 82%, rgba(15,143,114,0.20) 0%, rgba(10,10,15,0) 58%)',
           }}
         />
         <div className="absolute inset-0 bg-[#0A0A0F]/35" />
@@ -594,7 +656,7 @@ function CoverflowHero({
               onClick={() => onGoTo(i)}
               aria-label={`Go to slide ${i + 1}`}
               className={`h-1.5 rounded-full transition-all ${
-                i === index ? 'w-5 bg-[#FF4D5E]' : 'w-1.5 bg-white/40'
+                i === index ? 'w-5 bg-[#0F8F72]' : 'w-1.5 bg-white/40'
               }`}
             />
           ))}
@@ -671,7 +733,7 @@ function BottomTab({ icon, label, active, onClick }: BottomTabProps) {
     <button
       onClick={onClick}
       className={`flex flex-1 flex-col items-center gap-1 rounded-lg py-1.5 transition ${
-        active ? 'text-[#FF4D5E]' : 'text-white/50'
+        active ? 'text-[#0F8F72]' : 'text-white/50'
       }`}
     >
       {icon}
@@ -687,18 +749,30 @@ interface RailRowProps {
   icon?: React.ReactNode;
   shows: Show[];
   onSelectShow: (s: Show) => void;
+  onViewAll?: () => void;
+  viewAllLabel?: string;
 }
 
-function RailRow({ title, icon, shows, onSelectShow }: RailRowProps) {
+function RailRow({ title, icon, shows, onSelectShow, onViewAll, viewAllLabel }: RailRowProps) {
   const scrollerRef = useCallback((node: HTMLDivElement | null) => {
     if (node) node.scrollLeft = 0;
   }, []);
 
   return (
     <section className="mt-10">
-      <div className="mb-3 flex items-center gap-2">
-        {icon}
-        <h2 className="text-lg font-bold tracking-tight">{title}</h2>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {icon}
+          <h2 className="text-lg font-bold tracking-tight">{title}</h2>
+        </div>
+        {onViewAll && (
+          <button
+            onClick={onViewAll}
+            className="shrink-0 text-xs font-semibold text-white/50 transition hover:text-[#0F8F72]"
+          >
+            {viewAllLabel}
+          </button>
+        )}
       </div>
       <div
         ref={scrollerRef}

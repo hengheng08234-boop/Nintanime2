@@ -180,7 +180,7 @@ export default function ShowDetailScreen({
                 onClick={() => {
                   if (episodes.length > 0 && detail) onPlayEpisode(episodes[0], detail);
                 }}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF4D5E] to-[#E63946] px-7 py-3 text-sm font-bold text-white shadow-[0_10px_30px_rgba(255,77,94,0.35)] transition hover:shadow-[0_14px_40px_rgba(255,77,94,0.5)] active:scale-95"
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0F8F72] to-[#0B6E58] px-7 py-3 text-sm font-bold text-white shadow-[0_10px_30px_rgba(15,143,114,0.35)] transition hover:shadow-[0_14px_40px_rgba(15,143,114,0.5)] active:scale-95"
               >
                 <Play className="h-5 w-5 fill-white" />
                 {show.type === 'movie' ? t.playMovie : t.playFirstEpisode}
@@ -203,7 +203,7 @@ export default function ShowDetailScreen({
                 ))}
               </div>
             ) : error ? (
-              <p className="text-sm text-[#FF4D5E]">{error}</p>
+              <p className="text-sm text-[#EF4444]">{error}</p>
             ) : episodes.length === 0 ? (
               <p className="text-sm text-white/40">{t.noEpisodes}</p>
             ) : (
@@ -217,7 +217,7 @@ export default function ShowDetailScreen({
                     className={`group flex w-full items-center gap-4 overflow-hidden rounded-xl border p-3 text-left transition ${
                       locked
                         ? 'border-[#E8A94A]/25 bg-[#1A1710] hover:border-[#E8A94A]/60 hover:shadow-[0_0_24px_rgba(232,169,74,0.18)]'
-                        : 'border-white/5 bg-[#14141C] hover:border-[#FF4D5E]/30 hover:bg-[#1E1E2A]'
+                        : 'border-white/5 bg-[#14141C] hover:border-[#0F8F72]/30 hover:bg-[#1E1E2A]'
                     }`}
                   >
                     <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg sm:w-48">
@@ -246,7 +246,7 @@ export default function ShowDetailScreen({
                         </div>
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E]">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0F8F72]">
                             <Play className="h-4 w-4 fill-white text-white" />
                           </div>
                         </div>
@@ -276,14 +276,14 @@ export default function ShowDetailScreen({
                           </span>
                         )}
                       </div>
-                      <h3 className="mt-0.5 truncate text-base font-semibold text-white transition group-hover:text-[#FF4D5E]">
+                      <h3 className="mt-0.5 truncate text-base font-semibold text-white transition group-hover:text-[#0F8F72]">
                         {ep.title}
                       </h3>
                       <p className="mt-1 line-clamp-1 text-sm text-white/50">
                         {locked ? t.lockedUnlockHint : ep.description}
                       </p>
                     </div>
-                    <ChevronRight className="hidden h-5 w-5 shrink-0 text-white/30 transition group-hover:text-[#FF4D5E] sm:block" />
+                    <ChevronRight className="hidden h-5 w-5 shrink-0 text-white/30 transition group-hover:text-[#0F8F72] sm:block" />
                   </button>
                   );
                 })}

@@ -19,7 +19,7 @@ export default function ShowCard({ show, onClick }: ShowCardProps) {
       onClick={() => onClick(show)}
       className="group relative w-[160px] shrink-0 text-left sm:w-[180px]"
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#1E1E2A] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_18px_40px_rgba(0,0,0,0.65)] group-hover:ring-[#FF4D5E]/40">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#1E1E2A] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_18px_40px_rgba(0,0,0,0.65)] group-hover:ring-[#0F8F72]/40">
         {!loaded && <div className="absolute inset-0 animate-pulse bg-[#1E1E2A]" />}
         <img
           src={show.poster_url ?? ''}
@@ -45,13 +45,13 @@ export default function ShowCard({ show, onClick }: ShowCardProps) {
         </div>
         {/* Hover play overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FF4D5E] shadow-[0_0_24px_rgba(255,77,94,0.6)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0F8F72] shadow-[0_0_24px_rgba(15,143,114,0.6)]">
             <Play className="h-5 w-5 fill-white text-white" />
           </div>
         </div>
       </div>
       <div className="mt-2.5 px-0.5">
-        <h3 className="truncate text-sm font-semibold text-white transition group-hover:text-[#FF4D5E]">
+        <h3 className="truncate text-sm font-semibold text-white transition group-hover:text-[#0F8F72]">
           {show.title}
         </h3>
         <p className="mt-0.5 text-xs text-white/50">

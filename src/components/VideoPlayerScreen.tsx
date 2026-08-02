@@ -211,7 +211,7 @@ export default function VideoPlayerScreen({
         {/* Resolving playback URL */}
         {resolving && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black">
-            <Loader2 className="h-8 w-8 animate-spin text-[#FF4D5E]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#0F8F72]" />
           </div>
         )}
 
@@ -231,14 +231,14 @@ export default function VideoPlayerScreen({
         {/* Buffering spinner */}
         {buffering && !loadError && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/20 border-t-[#FF4D5E]" />
+            <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/20 border-t-[#0F8F72]" />
           </div>
         )}
 
         {/* Load error */}
         {loadError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
-            <Loader2 className="h-8 w-8 text-[#FF4D5E]" />
+            <Loader2 className="h-8 w-8 text-[#0F8F72]" />
             <p className="text-sm font-semibold text-white">{t.unableToLoadVideo}</p>
             <p className="max-w-xs text-xs text-white/50">
               {t.videoMissingHint}
@@ -272,7 +272,7 @@ export default function VideoPlayerScreen({
             showControls ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <p className="text-xs font-medium uppercase tracking-wider text-[#FF4D5E]">
+          <p className="text-xs font-medium uppercase tracking-wider text-[#0F8F72]">
             {show.title}
           </p>
           <h2 className="mt-1 text-xl font-bold text-white">
@@ -287,7 +287,7 @@ export default function VideoPlayerScreen({
             className="absolute inset-0 z-10 flex items-center justify-center"
             aria-label="Play"
           >
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#FF4D5E]/90 shadow-[0_0_40px_rgba(255,77,94,0.5)] transition hover:scale-110">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#0F8F72]/90 shadow-[0_0_40px_rgba(15,143,114,0.5)] transition hover:scale-110">
               <Play className="h-9 w-9 fill-white text-white" />
             </div>
           </button>
@@ -307,7 +307,7 @@ export default function VideoPlayerScreen({
             <div className="group relative flex-1">
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
                 <div
-                  className="h-full rounded-full bg-[#FF4D5E] transition-all"
+                  className="h-full rounded-full bg-[#0F8F72] transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -331,28 +331,28 @@ export default function VideoPlayerScreen({
           <div className="flex items-center gap-4">
             <button
               onClick={togglePlay}
-              className="text-white transition hover:text-[#FF4D5E]"
+              className="text-white transition hover:text-[#0F8F72]"
               aria-label={playing ? 'Pause' : 'Play'}
             >
               {playing ? <Pause className="h-6 w-6 fill-white" /> : <Play className="h-6 w-6 fill-white" />}
             </button>
             <button
               onClick={() => skip(-10)}
-              className="text-white/80 transition hover:text-[#FF4D5E]"
+              className="text-white/80 transition hover:text-[#0F8F72]"
               aria-label="Back 10s"
             >
               <SkipBack className="h-5 w-5" />
             </button>
             <button
               onClick={() => skip(10)}
-              className="text-white/80 transition hover:text-[#FF4D5E]"
+              className="text-white/80 transition hover:text-[#0F8F72]"
               aria-label="Forward 10s"
             >
               <SkipForward className="h-5 w-5" />
             </button>
             <button
               onClick={toggleMute}
-              className="text-white/80 transition hover:text-[#FF4D5E]"
+              className="text-white/80 transition hover:text-[#0F8F72]"
               aria-label={muted ? 'Unmute' : 'Mute'}
             >
               {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -360,7 +360,7 @@ export default function VideoPlayerScreen({
             <div className="ml-auto flex items-center gap-4">
               <button
                 onClick={toggleFullscreen}
-                className="text-white/80 transition hover:text-[#FF4D5E]"
+                className="text-white/80 transition hover:text-[#0F8F72]"
                 aria-label="Fullscreen"
               >
                 <Maximize className="h-5 w-5" />

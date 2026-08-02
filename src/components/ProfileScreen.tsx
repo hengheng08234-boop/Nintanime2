@@ -166,7 +166,7 @@ export default function ProfileScreen({
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0A0A0F]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#FF4D5E]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#0F8F72]" />
       </div>
     );
   }
@@ -177,7 +177,7 @@ export default function ProfileScreen({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 20% 0%, rgba(255,77,94,0.15) 0%, rgba(10,10,15,0) 45%)',
+            'radial-gradient(circle at 20% 0%, rgba(15,143,114,0.15) 0%, rgba(10,10,15,0) 45%)',
         }}
       />
 
@@ -220,7 +220,7 @@ export default function ProfileScreen({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF4D5E] to-[#E63946]">
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#0F8F72] to-[#0B6E58]">
                     <span
                       className="text-5xl font-black text-white"
                       style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif' }}
@@ -233,7 +233,7 @@ export default function ProfileScreen({
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E] text-white shadow-lg ring-4 ring-[#0A0A0F] transition hover:bg-[#E63946] active:scale-95 disabled:opacity-60"
+                className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full bg-[#0F8F72] text-white shadow-lg ring-4 ring-[#0A0A0F] transition hover:bg-[#0B6E58] active:scale-95 disabled:opacity-60"
                 aria-label="Change avatar"
               >
                 {uploading ? (
@@ -265,13 +265,13 @@ export default function ProfileScreen({
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-[#FF4D5E]/50"
+                    className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-[#0F8F72]/50"
                     autoFocus
                   />
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center gap-1 rounded-lg bg-[#FF4D5E] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#E63946] disabled:opacity-60"
+                    className="flex items-center gap-1 rounded-lg bg-[#0F8F72] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#0B6E58] disabled:opacity-60"
                   >
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     {t.save}
@@ -284,7 +284,7 @@ export default function ProfileScreen({
                   </span>
                   <button
                     onClick={() => setEditing(true)}
-                    className="text-white/40 transition hover:text-[#FF4D5E]"
+                    className="text-white/40 transition hover:text-[#0F8F72]"
                     aria-label="Edit name"
                   >
                     <Edit3 className="h-4 w-4" />
@@ -314,7 +314,7 @@ export default function ProfileScreen({
                   ? '1px solid rgba(232,169,74,0.3)'
                   : '1px solid rgba(255,255,255,0.1)',
                 background: subscribed
-                  ? 'linear-gradient(160deg, rgba(232,169,74,0.1) 0%, rgba(255,77,94,0.05) 100%)'
+                  ? 'linear-gradient(160deg, rgba(232,169,74,0.1) 0%, rgba(15,143,114,0.05) 100%)'
                   : 'rgba(255,255,255,0.03)',
               }}
             >
@@ -495,10 +495,10 @@ export default function ProfileScreen({
           {profile?.is_admin && (
           <button
             onClick={onOpenAdmin}
-            className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[#FF4D5E]/30 hover:bg-white/[0.05]"
+            className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[#0F8F72]/30 hover:bg-white/[0.05]"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF4D5E]/15">
-              <Settings className="h-5 w-5 text-[#FF4D5E]" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F8F72]/15">
+              <Settings className="h-5 w-5 text-[#0F8F72]" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{t.videoManagement}</p>

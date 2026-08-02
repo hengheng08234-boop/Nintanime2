@@ -256,6 +256,18 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
     await loadShows();
   };
 
+  // Whole-show free flag — every episode of the show becomes watchable by
+  // anyone, no subscription needed. Powers the "Free Watching" home row.
+  const handleToggleShowFree = async (showId: string, next: boolean) => {
+    setError('');
+    const { error } = await supabase.from('shows').update({ is_free: next }).eq('id', showId);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    await loadShows();
+  };
+
   const handleAddEpisode = async (showId: string, movieTitle?: string) => {
     setBusy(true);
     setError('');
@@ -523,6 +535,29 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleShowFree(show.id, !show.is_free);
+                        }}
+                        title={
+                          show.is_free
+                            ? 'Free for everyone — click to require a subscription again'
+                            : 'Locked — click to make the whole show free to watch'
+                        }
+                        className={`flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                          show.is_free
+                            ? 'border-[#22C55E]/30 bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {show.is_free ? (
+                          <Unlock className="h-3.5 w-3.5" />
+                        ) : (
+                          <Lock className="h-3.5 w-3.5" />
+                        )}
+                        {show.is_free ? 'Free' : 'Make Free'}
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

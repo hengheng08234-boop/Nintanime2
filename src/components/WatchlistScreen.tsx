@@ -89,7 +89,7 @@ export default function WatchlistScreen({
                       className="h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition group-hover:bg-black/30">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF4D5E]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0F8F72]">
                         <Play className="h-4 w-4 fill-white text-white" />
                       </div>
                     </div>
@@ -103,14 +103,14 @@ export default function WatchlistScreen({
                     </p>
                     <button
                       onClick={() => onResumeEpisode(item.show, item.episode.id)}
-                      className="mt-2 flex items-center gap-1.5 rounded-full bg-[#FF4D5E] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#E63946] active:scale-95"
+                      className="mt-2 flex items-center gap-1.5 rounded-full bg-[#0F8F72] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#0B6E58] active:scale-95"
                     >
                       <Play className="h-3 w-3 fill-white" /> {t.resume}
                     </button>
                   </div>
                   <button
                     onClick={() => handleClearContinue(item.show.id)}
-                    className="shrink-0 rounded-full p-2 text-white/30 transition hover:text-[#FF4D5E]"
+                    className="shrink-0 rounded-full p-2 text-white/30 transition hover:text-[#0F8F72]"
                     aria-label={t.removeFromList}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -124,7 +124,7 @@ export default function WatchlistScreen({
         {/* Want to watch */}
         <section className="mt-10">
           <div className="mb-3 flex items-center gap-2">
-            <Bookmark className="h-5 w-5 text-[#FF4D5E]" />
+            <Bookmark className="h-5 w-5 text-[#0F8F72]" />
             <h2 className="text-lg font-bold tracking-tight">{t.wantToWatch}</h2>
           </div>
           {watchlist.length === 0 ? (
@@ -160,7 +160,7 @@ export default function WatchlistScreen({
                   </button>
                   <button
                     onClick={() => handleRemove(s.id)}
-                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white/70 backdrop-blur-sm transition hover:text-[#FF4D5E]"
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white/70 backdrop-blur-sm transition hover:text-[#0F8F72]"
                     aria-label={t.removeFromList}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -180,7 +180,7 @@ export default function WatchlistScreen({
             </p>
             <button
               onClick={onBack}
-              className="mt-2 rounded-full bg-[#FF4D5E] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#E63946] active:scale-95"
+              className="mt-2 rounded-full bg-[#0F8F72] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#0B6E58] active:scale-95"
             >
               {t.navHome}
             </button>
