@@ -50,6 +50,9 @@ export const appText = {
     noResults: 'No titles match your search.',
     trendingNow: 'Trending Now',
     popularSeason: 'Popular This Season',
+    freeWatching: 'Free Watching',
+    newRelease: 'New Release',
+    viewAll: 'View All',
     footerTagline: '© 2026 NINT ANIME — Stream · Discover · Obsess',
 
     // Profile screen
@@ -262,6 +265,9 @@ export const appText = {
     noResults: 'រកមិនឃើញចំណងជើងដែលត្រូវនឹងការស្វែងរករបស់អ្នក។',
     trendingNow: 'កំពុងពេញនិយម',
     popularSeason: 'ពេញនិយមរដូវនេះ',
+    freeWatching: 'មើលឥតគិតថ្លៃ',
+    newRelease: 'ចេញថ្មីៗ',
+    viewAll: 'មើលទាំងអស់',
     footerTagline: '© ២០២៦ NINT ANIME — មើល · ស្វែងរក · ចូលចិត្ត',
 
     // Profile screen

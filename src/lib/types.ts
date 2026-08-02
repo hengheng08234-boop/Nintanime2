@@ -19,6 +19,8 @@ export interface Show {
   type: ShowType;
   featured: boolean;
   view_count?: number;
+  is_free?: boolean;
+  created_at?: string;
   genres?: Genre[];
 }
 

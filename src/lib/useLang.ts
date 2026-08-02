@@ -6,9 +6,9 @@ export const LANG_STORAGE_KEY = 'nint-anime-lang';
 
 export function useLang() {
   const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === 'undefined') return 'en';
+    if (typeof window === 'undefined') return 'km';
     const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
-    return saved === 'km' || saved === 'en' ? saved : 'en';
+    return saved === 'km' || saved === 'en' ? saved : 'km';
   });
 
   const setLang = (next: Lang) => {
