@@ -42,31 +42,30 @@ const PLANS: {
   { key: '1y', months: 12, price: 28, labelKey: 'sub12Months', tagKey: 'subBestValue' },
 ];
 
+// Bundled with the app itself (public/assets/images) — the QR image
+// already has the logo, plan name, and price baked in, so it always
+// renders instantly and never depends on an edge function or storage
+// bucket being configured.
+const PLAN_QR: Record<PlanKey, string> = {
+  '1m': '/assets/images/subscription-1m.png',
+  '2m': '/assets/images/subscription-2m.png',
+  '6m': '/assets/images/subscription-6m.png',
+  '1y': '/assets/images/subscription-1y.png',
+};
+
 // A pending manual-review request auto-fails after this long, so nobody is
 // left waiting forever if it isn't picked up.
 const REVIEW_TIMEOUT_MS = 60 * 60 * 1000;
 const POLL_INTERVAL_MS = 15000;
 
-function QrPaymentCard({ qrSrc, amount }: { qrSrc: string; amount: number }) {
+function QrPaymentCard({ qrSrc }: { qrSrc: string }) {
   return (
     <div className="flex flex-col items-center py-1">
-      <img
-        src={LOGO_URL}
-        alt="NINT ANIME"
-        className="h-16 w-16 object-contain drop-shadow-[0_6px_18px_rgba(232,169,74,0.35)]"
-      />
-      <p
-        className="mt-2 text-sm font-extrabold uppercase tracking-wide text-white"
-        style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif', letterSpacing: '0.06em' }}
-      >
-        Nint Anime
-      </p>
-      <p className="mt-0.5 text-2xl font-extrabold text-[#E8A94A]">${amount.toFixed(2)}</p>
       <img
         key={qrSrc}
         src={qrSrc}
         alt="Payment QR"
-        className="mt-3 h-48 w-48 rounded-2xl bg-white p-2 object-contain"
+        className="h-64 w-64 rounded-2xl bg-white p-2 object-contain shadow-lg"
       />
     </div>
   );
@@ -97,9 +96,6 @@ export default function SubscriptionModal({ onClose }: Props) {
   const [step, setStep] = useState<Step>('summary');
   const [error, setError] = useState('');
 
-  const [qrLoading, setQrLoading] = useState(false);
-  const [qr, setQr] = useState<{ qrImage: string } | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [ocrResult, setOcrResult] = useState<ReceiptOcrResult | null>(null);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
@@ -124,7 +120,6 @@ export default function SubscriptionModal({ onClose }: Props) {
     // Changing plan mid-flow starts the payment over.
     stopTimers();
     setStep('summary');
-    setQr(null);
     setOcrResult(null);
     setError('');
   }, [selected]);
@@ -139,25 +134,14 @@ export default function SubscriptionModal({ onClose }: Props) {
       : `${m}:${String(s).padStart(2, '0')}`;
   };
 
-  const handleGenerateQr = async () => {
-    setStep('qr');
-    setQrLoading(true);
+  const handleGenerateQr = () => {
     setError('');
-    const { data, error: fnError } = await supabase.functions.invoke('create-qr-payment', {
-      body: { plan: selected },
-    });
-    setQrLoading(false);
-    if (fnError || data?.error) {
-      setError(data?.error || data?.detail || fnError?.message || t.subQrGenericError);
-      return;
-    }
-    setQr({ qrImage: data.qrImage });
+    setStep('qr');
   };
 
   const handleSaveQr = () => {
-    if (!qr) return;
     const a = document.createElement('a');
-    a.href = qr.qrImage;
+    a.href = PLAN_QR[selected];
     a.download = `nint-anime-payment-qr-${selected}.png`;
     document.body.appendChild(a);
     a.click();
@@ -440,56 +424,31 @@ export default function SubscriptionModal({ onClose }: Props) {
               </div>
               <p className="mb-2 px-2 text-center text-[10px] leading-relaxed text-white/50">{t.subStep2Desc}</p>
 
-              {qrLoading && (
-                <div className="mx-auto flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10">
-                  <Loader2 size={28} className="animate-spin text-[#E8A94A]" />
-                  <p className="text-[10px] text-white/50">{t.subGeneratingQr}</p>
-                </div>
-              )}
-
-              {!qrLoading && error && (
-                <div className="py-2 text-center">
-                  <p className="mb-3 text-[11px] text-[#EF4444]">{error}</p>
-                  <button
-                    onClick={handleGenerateQr}
-                    className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-                    style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-                  >
-                    <RefreshCw size={13} />
-                    {t.subTryAgain}
-                  </button>
-                </div>
-              )}
-
-              {!qrLoading && !error && qr && (
-                <>
-                  <QrPaymentCard qrSrc={qr.qrImage} amount={selectedPlan.price} />
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button
-                      onClick={handleSaveQr}
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
-                    >
-                      <Download size={13} />
-                      {t.subSaveQr}
-                    </button>
-                    <button
-                      onClick={() => setStep('upload')}
-                      className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
-                      style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-                    >
-                      <CheckCircle2 size={13} />
-                      {t.subIvePaidUpload}
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => setStep('summary')}
-                    className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-white/40 hover:text-white/60"
-                  >
-                    <ArrowLeft size={11} />
-                    {t.subBackBtn}
-                  </button>
-                </>
-              )}
+              <QrPaymentCard qrSrc={PLAN_QR[selected]} />
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleSaveQr}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                >
+                  <Download size={13} />
+                  {t.subSaveQr}
+                </button>
+                <button
+                  onClick={() => setStep('upload')}
+                  className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
+                  style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                >
+                  <CheckCircle2 size={13} />
+                  {t.subIvePaidUpload}
+                </button>
+              </div>
+              <button
+                onClick={() => setStep('summary')}
+                className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-white/40 hover:text-white/60"
+              >
+                <ArrowLeft size={11} />
+                {t.subBackBtn}
+              </button>
             </div>
           )}
 
@@ -500,7 +459,6 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <Upload size={14} className="text-[#0F8F72]" />
                 <p className="text-[11px] font-bold text-white">{t.subUploadReceiptTitle}</p>
               </div>
-              <p className="mb-3 px-2 text-[10px] leading-relaxed text-white/50">{t.subUploadReceiptDesc}</p>
               {error && <p className="mb-2 text-[10.5px] text-[#EF4444]">{error}</p>}
               <input
                 ref={fileInputRef}
