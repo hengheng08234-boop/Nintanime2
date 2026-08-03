@@ -229,6 +229,29 @@ export const appText = {
     lockedVip: 'VIP',
     lockedUnlockHint: 'Subscribe to unlock',
     subPerMonth: '/mo',
+
+    // New-member promo popup
+    promoEyebrow: 'New member gift',
+    promoGuestTitle: 'Join & Win Free VIP',
+    promoGuestBody:
+      'Create an account and become a VIP member to unlock a free lucky draw — win up to 6 months of VIP, on us.',
+    promoGuestCta: 'Sign up now',
+    promoSpinTitle: 'Your Gift Is Ready',
+    promoSpinBody:
+      "Welcome, VIP! You've unlocked one free spin — win bonus VIP days added straight to your account.",
+    promoSpinCta: 'Spin now',
+
+    // Lucky draw wheel
+    spinEyebrow: 'Lucky Draw',
+    spinTitle: 'Spin To Win VIP Days',
+    spinButton: 'Spin',
+    spinSpinning: 'Spinning…',
+    spinCollect: 'Awesome, collect it!',
+    spinWonPrefix: 'You won',
+    spinWonSuffixVip: 'of free VIP — added to your account!',
+    spinAlreadyUsed: 'This lucky draw has already been used on your account.',
+    spinNotVip: 'Become a VIP member first to unlock your free spin.',
+    spinError: "Couldn't claim your spin right now. Please try again.",
   },
   km: {
     // Shared
@@ -460,5 +483,28 @@ export const appText = {
     lockedVip: 'VIP',
     lockedUnlockHint: 'ជាវសមាជិកដើម្បីដោះសោ',
     subPerMonth: '/ខែ',
+
+    // New-member promo popup
+    promoEyebrow: 'អំណោយសមាជិកថ្មី',
+    promoGuestTitle: 'ចុះឈ្មោះ ឈ្នះ VIP ឥតគិតថ្លៃ',
+    promoGuestBody:
+      'បង្កើតគណនី ហើយក្លាយជាសមាជិក VIP ដើម្បីដោះសោការចាប់រង្វាន់ឥតគិតថ្លៃ — ឈ្នះរហូតដល់ ៦ខែ VIP។',
+    promoGuestCta: 'ចុះឈ្មោះឥឡូវនេះ',
+    promoSpinTitle: 'អំណោយរបស់អ្នករួចរាល់ហើយ',
+    promoSpinBody:
+      'សូមស្វាគមន៍សមាជិក VIP! អ្នកបានដោះសោការចាប់រង្វាន់ម្ដងឥតគិតថ្លៃ — ឈ្នះថ្ងៃ VIP បន្ថែមចូលគណនីភ្លាមៗ។',
+    promoSpinCta: 'ចាប់រង្វាន់ឥឡូវនេះ',
+
+    // Lucky draw wheel
+    spinEyebrow: 'ការចាប់រង្វាន់',
+    spinTitle: 'ចាប់រង្វាន់ឈ្នះថ្ងៃ VIP',
+    spinButton: 'ចាប់រង្វាន់',
+    spinSpinning: 'កំពុងបង្វិល…',
+    spinCollect: 'អស្ចារ្យ! ទទួលរង្វាន់',
+    spinWonPrefix: 'អ្នកឈ្នះ',
+    spinWonSuffixVip: 'VIP ឥតគិតថ្លៃ — បានបន្ថែមទៅគណនីរបស់អ្នកហើយ!',
+    spinAlreadyUsed: 'គណនីរបស់អ្នកបានប្រើការចាប់រង្វាន់នេះរួចហើយ។',
+    spinNotVip: 'សូមក្លាយជាសមាជិក VIP សិន ដើម្បីដោះសោការចាប់រង្វាន់ឥតគិតថ្លៃ។',
+    spinError: 'មិនអាចទទួលការចាប់រង្វាន់បានទេ សូមព្យាយាមម្ដងទៀត។',
   },
 } as const;
