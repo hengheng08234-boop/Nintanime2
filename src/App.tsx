@@ -5,6 +5,7 @@ import {
   fetchProfile,
   isSubscribed,
   subscribeToSessionKick,
+  subscribeToProfileChanges,
   checkSessionStillValid,
   type Profile,
 } from '@/lib/auth';
@@ -20,6 +21,8 @@ import WatchlistScreen from '@/components/WatchlistScreen';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import AdminScreen from '@/components/AdminScreen';
 import DesktopBlockedScreen from '@/components/DesktopBlockedScreen';
+import NewMemberPromoBanner from '@/components/NewMemberPromoBanner';
+import LuckyDrawModal from '@/components/LuckyDrawModal';
 import { useIsMobile } from '@/lib/useIsMobile';
 
 type Screen =
@@ -40,6 +43,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [searchOpen, setSearchOpen] = useState(false);
   const [sessionKicked, setSessionKicked] = useState(false);
+  const [promoDismissed, setPromoDismissed] = useState(false);
+  const [showLuckyDraw, setShowLuckyDraw] = useState(false);
   const isMobile = useIsMobile();
   const isAdmin = !!profile?.is_admin;
 
@@ -80,6 +85,7 @@ function App() {
 
   const handleAuthSuccess = () => {
     setSessionKicked(false);
+    setPromoDismissed(false);
     setScreen({ name: 'home' });
     setActiveTab('home');
   };
@@ -88,6 +94,7 @@ function App() {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setPromoDismissed(false);
     setScreen({ name: 'home' });
     setActiveTab('home');
   };
@@ -121,6 +128,19 @@ function App() {
       unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibility);
     };
+  }, [session?.user?.id]);
+
+  // Keep `profile` in sync live: when an admin confirms a payment or the
+  // auto QR-confirm edge function unlocks the account, subscription_expires_at
+  // changes server-side with no client action in between. Without this the
+  // new-member spin prompt (and VIP badge) wouldn't appear until next login.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const unsubscribe = subscribeToProfileChanges(userId, (updated) => {
+      setProfile(updated);
+    });
+    return unsubscribe;
   }, [session?.user?.id]);
 
   // Reuse the existing requireAuth pattern: proceed if signed in,
@@ -277,6 +297,18 @@ function App() {
     );
   }
 
+  // New-member lucky-draw promo: guests get a "sign up to win VIP" popup;
+  // signed-in users who just became VIP and haven't spun yet get a
+  // "claim your spin" popup instead. Neither shows once dismissed for this
+  // visit, and the spin prompt disappears the moment lucky_draw_used flips.
+  const promoVariant: 'guest' | 'spin-ready' | null = promoDismissed
+    ? null
+    : !session
+      ? 'guest'
+      : isSubscribed(profile) && profile && !profile.lucky_draw_used
+        ? 'spin-ready'
+        : null;
+
   // home — default landing screen for everyone (signed-in or browsing)
   return (
     <>
@@ -294,6 +326,28 @@ function App() {
       />
       {showSubModal && (
         <SubscriptionModal onClose={() => setShowSubModal(false)} />
+      )}
+      {promoVariant && (
+        <NewMemberPromoBanner
+          variant={promoVariant}
+          onDismiss={() => setPromoDismissed(true)}
+          onPrimary={() => {
+            setPromoDismissed(true);
+            if (promoVariant === 'guest') {
+              setScreen({ name: 'auth', mode: 'signup' });
+            } else {
+              setShowLuckyDraw(true);
+            }
+          }}
+        />
+      )}
+      {showLuckyDraw && (
+        <LuckyDrawModal
+          onClose={() => setShowLuckyDraw(false)}
+          onClaimed={() => {
+            if (session?.user?.id) refreshProfile(session.user.id);
+          }}
+        />
       )}
     </>
   );

@@ -11,6 +11,7 @@ export interface Profile {
   subscription_expires_at: string | null;
   active_session_id?: string | null;
   active_session_started_at?: string | null;
+  lucky_draw_used?: boolean;
 }
 
 export function isSubscribed(profile: Profile | null): boolean {
@@ -93,6 +94,36 @@ export function subscribeToSessionKick(
         if (newSessionId && localId && newSessionId !== localId) {
           onKicked();
         }
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+// Subscribes to realtime changes on this user's profile row and calls
+// `onChange` with the fresh row on every UPDATE — e.g. when an admin
+// confirms a payment, the auto QR-confirm edge function unlocks the
+// account, or claim_new_member_spin() extends subscription_expires_at.
+// Lets the UI (VIP badge, lucky-draw prompt) react live without a reload.
+export function subscribeToProfileChanges(
+  userId: string,
+  onChange: (profile: Profile) => void,
+): () => void {
+  const channel = supabase
+    .channel(`profile-changes-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${userId}`,
+      },
+      (payload) => {
+        onChange(payload.new as Profile);
       },
     )
     .subscribe();
@@ -201,7 +232,7 @@ export async function changePassword(
 export async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, phone, avatar_url, is_locked, is_admin, trial_started_at, subscription_expires_at')
+    .select('id, display_name, phone, avatar_url, is_locked, is_admin, trial_started_at, subscription_expires_at, lucky_draw_used')
     .eq('id', userId)
     .maybeSingle();
   if (error) return null;

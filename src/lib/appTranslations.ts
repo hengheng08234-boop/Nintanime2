@@ -196,7 +196,7 @@ export const appText = {
     subCheckingPayment: 'Checking your payment…',
     subGoToAba: 'Continue to ABA',
     subGoToAbaHint: 'Please read the note above first',
-    subUploadReceiptTitle: 'Upload & Verify',
+    subUploadReceiptTitle: 'Upload Receipt',
     subUploadReceiptDesc: 'Upload a clear screenshot of your payment receipt so we can verify it.',
     subChooseScreenshot: 'Choose Screenshot',
     subReadingImage: 'Reading receipt…',
@@ -208,11 +208,50 @@ export const appText = {
     subVerifySuccessTitle: 'Verified! VIP Unlocked',
     subVerifySuccessDesc: 'Your payment was matched automatically. Enjoy VIP plus 10 bonus days, free.',
     subBackBtn: 'Back',
+    subQrGenericError: 'Something went wrong. Please try again.',
+    subNotSignedIn: 'Please sign in again to continue.',
+    subManualIntro:
+      'Scan the QR with your banking app, then upload a screenshot of the receipt — our system checks it automatically.',
+    subIvePaidUpload: 'Upload Receipt',
+    subCheckNameLabel: 'Recipient name',
+    subCheckRefLabel: 'App reference tag',
+    subCheckDateLabel: 'Payment date/time',
+    subPendingTitle: 'Sent for review',
+    subPendingBody:
+      "We couldn't auto-match your screenshot, so it's been sent to our team. This is usually quick, but can take up to 1 hour.",
+    subPendingWaiting: 'Checking with admin…',
+    subContactAdminNow: 'Message Admin on Telegram',
+    subFailedTitle: "Verification didn't complete in time",
+    subFailedBody:
+      "We couldn't confirm this payment within 1 hour. Please message our admin on Telegram with your receipt so we can unlock it for you right away.",
 
     // Locked episode row
     lockedVip: 'VIP',
     lockedUnlockHint: 'Subscribe to unlock',
     subPerMonth: '/mo',
+
+    // New-member promo popup
+    promoEyebrow: 'New member gift',
+    promoGuestTitle: 'Join & Win Free VIP',
+    promoGuestBody:
+      'Create an account and become a VIP member to unlock a free lucky draw — win up to 6 months of VIP, on us.',
+    promoGuestCta: 'Sign up now',
+    promoSpinTitle: 'Your Gift Is Ready',
+    promoSpinBody:
+      "Welcome, VIP! You've unlocked one free spin — win bonus VIP days added straight to your account.",
+    promoSpinCta: 'Spin now',
+
+    // Lucky draw wheel
+    spinEyebrow: 'Lucky Draw',
+    spinTitle: 'Spin To Win VIP Days',
+    spinButton: 'Spin',
+    spinSpinning: 'Spinning…',
+    spinCollect: 'Awesome, collect it!',
+    spinWonPrefix: 'You won',
+    spinWonSuffixVip: 'of free VIP — added to your account!',
+    spinAlreadyUsed: 'This lucky draw has already been used on your account.',
+    spinNotVip: 'Become a VIP member first to unlock your free spin.',
+    spinError: "Couldn't claim your spin right now. Please try again.",
   },
   km: {
     // Shared
@@ -411,7 +450,7 @@ export const appText = {
     subCheckingPayment: 'កំពុងពិនិត្យការទូទាត់របស់អ្នក…',
     subGoToAba: 'បន្តទៅកាន់ ABA',
     subGoToAbaHint: 'សូមអានចំណាំខាងលើសិន',
-    subUploadReceiptTitle: 'អាប់ឡូត & ផ្ទៀងផ្ទាត់',
+    subUploadReceiptTitle: 'អាប់ឡូតវិក្កយបត្រ',
     subUploadReceiptDesc: 'អាប់ឡូតរូបថតអេក្រង់វិក័យបត្រទូទាត់ឱ្យច្បាស់ ដើម្បីឱ្យយើងអាចផ្ទៀងផ្ទាត់បាន។',
     subChooseScreenshot: 'ជ្រើសរើសរូបថតអេក្រង់',
     subReadingImage: 'កំពុងអានវិក័យបត្រ…',
@@ -423,10 +462,49 @@ export const appText = {
     subVerifySuccessTitle: 'ផ្ទៀងផ្ទាត់ជោគជ័យ! VIP បានដោះសោ',
     subVerifySuccessDesc: 'ការទូទាត់របស់អ្នកបានផ្គូផ្គងដោយស្វ័យប្រវត្តិ។ សូមរីករាយជាមួយ VIP បូក ១០ ថ្ងៃរង្វាន់ ដោយឥតគិតថ្លៃ។',
     subBackBtn: 'ថយក្រោយ',
+    subQrGenericError: 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្ដងទៀត។',
+    subNotSignedIn: 'សូមចូលគណនីម្ដងទៀតដើម្បីបន្ត។',
+    subManualIntro:
+      'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ — ប្រព័ន្ធរបស់យើងនឹងពិនិត្យដោយស្វ័យប្រវត្តិ។',
+    subIvePaidUpload: 'អាប់ឡូតវិក្កយបត្រ',
+    subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
+    subCheckRefLabel: 'លេខកូដយោង (App)',
+    subCheckDateLabel: 'ថ្ងៃ/ម៉ោង ទូទាត់',
+    subPendingTitle: 'បានផ្ញើសម្រាប់ពិនិត្យ',
+    subPendingBody:
+      'ប្រព័ន្ធមិនអាចផ្គូផ្គងរូបភាពដោយស្វ័យប្រវត្តិបានទេ ដូច្នេះបានផ្ញើទៅក្រុមការងារជំនួយ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
+    subPendingWaiting: 'កំពុងពិនិត្យជាមួយអភិបាល…',
+    subContactAdminNow: 'ផ្ញើសារទៅអភិបាលតាម Telegram',
+    subFailedTitle: 'ការផ្ទៀងផ្ទាត់មិនចប់ក្នុងពេលកំណត់',
+    subFailedBody:
+      'យើងមិនអាចបញ្ជាក់ការទូទាត់នេះក្នុងរយៈពេល ១ម៉ោងបានទេ។ សូមផ្ញើសារទៅអភិបាលតាម Telegram ជាមួយវិក្កយបត្ររបស់អ្នក ដើម្បីឱ្យយើងជួយដោះសោភ្លាមៗ។',
 
     // Locked episode row
     lockedVip: 'VIP',
     lockedUnlockHint: 'ជាវសមាជិកដើម្បីដោះសោ',
     subPerMonth: '/ខែ',
+
+    // New-member promo popup
+    promoEyebrow: 'អំណោយសមាជិកថ្មី',
+    promoGuestTitle: 'ចុះឈ្មោះ ឈ្នះ VIP ឥតគិតថ្លៃ',
+    promoGuestBody:
+      'បង្កើតគណនី ហើយក្លាយជាសមាជិក VIP ដើម្បីដោះសោការចាប់រង្វាន់ឥតគិតថ្លៃ — ឈ្នះរហូតដល់ ៦ខែ VIP។',
+    promoGuestCta: 'ចុះឈ្មោះឥឡូវនេះ',
+    promoSpinTitle: 'អំណោយរបស់អ្នករួចរាល់ហើយ',
+    promoSpinBody:
+      'សូមស្វាគមន៍សមាជិក VIP! អ្នកបានដោះសោការចាប់រង្វាន់ម្ដងឥតគិតថ្លៃ — ឈ្នះថ្ងៃ VIP បន្ថែមចូលគណនីភ្លាមៗ។',
+    promoSpinCta: 'ចាប់រង្វាន់ឥឡូវនេះ',
+
+    // Lucky draw wheel
+    spinEyebrow: 'ការចាប់រង្វាន់',
+    spinTitle: 'ចាប់រង្វាន់ឈ្នះថ្ងៃ VIP',
+    spinButton: 'ចាប់រង្វាន់',
+    spinSpinning: 'កំពុងបង្វិល…',
+    spinCollect: 'អស្ចារ្យ! ទទួលរង្វាន់',
+    spinWonPrefix: 'អ្នកឈ្នះ',
+    spinWonSuffixVip: 'VIP ឥតគិតថ្លៃ — បានបន្ថែមទៅគណនីរបស់អ្នកហើយ!',
+    spinAlreadyUsed: 'គណនីរបស់អ្នកបានប្រើការចាប់រង្វាន់នេះរួចហើយ។',
+    spinNotVip: 'សូមក្លាយជាសមាជិក VIP សិន ដើម្បីដោះសោការចាប់រង្វាន់ឥតគិតថ្លៃ។',
+    spinError: 'មិនអាចទទួលការចាប់រង្វាន់បានទេ សូមព្យាយាមម្ដងទៀត។',
   },
 } as const;
