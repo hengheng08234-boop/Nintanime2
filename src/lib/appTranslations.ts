@@ -208,6 +208,22 @@ export const appText = {
     subVerifySuccessTitle: 'Verified! VIP Unlocked',
     subVerifySuccessDesc: 'Your payment was matched automatically. Enjoy VIP plus 10 bonus days, free.',
     subBackBtn: 'Back',
+    subQrGenericError: 'Something went wrong. Please try again.',
+    subNotSignedIn: 'Please sign in again to continue.',
+    subManualIntro:
+      'Scan the QR with your banking app, then upload a screenshot of the receipt — our system checks it automatically.',
+    subIvePaidUpload: "I've Paid — Upload Receipt",
+    subCheckNameLabel: 'Recipient name',
+    subCheckRefLabel: 'App reference tag',
+    subCheckDateLabel: 'Payment date/time',
+    subPendingTitle: 'Sent for review',
+    subPendingBody:
+      "We couldn't auto-match your screenshot, so it's been sent to our team. This is usually quick, but can take up to 1 hour.",
+    subPendingWaiting: 'Checking with admin…',
+    subContactAdminNow: 'Message Admin on Telegram',
+    subFailedTitle: "Verification didn't complete in time",
+    subFailedBody:
+      "We couldn't confirm this payment within 1 hour. Please message our admin on Telegram with your receipt so we can unlock it for you right away.",
 
     // Locked episode row
     lockedVip: 'VIP',
@@ -423,6 +439,22 @@ export const appText = {
     subVerifySuccessTitle: 'ផ្ទៀងផ្ទាត់ជោគជ័យ! VIP បានដោះសោ',
     subVerifySuccessDesc: 'ការទូទាត់របស់អ្នកបានផ្គូផ្គងដោយស្វ័យប្រវត្តិ។ សូមរីករាយជាមួយ VIP បូក ១០ ថ្ងៃរង្វាន់ ដោយឥតគិតថ្លៃ។',
     subBackBtn: 'ថយក្រោយ',
+    subQrGenericError: 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្ដងទៀត។',
+    subNotSignedIn: 'សូមចូលគណនីម្ដងទៀតដើម្បីបន្ត។',
+    subManualIntro:
+      'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ — ប្រព័ន្ធរបស់យើងនឹងពិនិត្យដោយស្វ័យប្រវត្តិ។',
+    subIvePaidUpload: 'ខ្ញុំបានបង់ប្រាក់ហើយ — អាប់ឡូតវិក្កយបត្រ',
+    subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
+    subCheckRefLabel: 'លេខកូដយោង (App)',
+    subCheckDateLabel: 'ថ្ងៃ/ម៉ោង ទូទាត់',
+    subPendingTitle: 'បានផ្ញើសម្រាប់ពិនិត្យ',
+    subPendingBody:
+      'ប្រព័ន្ធមិនអាចផ្គូផ្គងរូបភាពដោយស្វ័យប្រវត្តិបានទេ ដូច្នេះបានផ្ញើទៅក្រុមការងារជំនួយ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
+    subPendingWaiting: 'កំពុងពិនិត្យជាមួយអភិបាល…',
+    subContactAdminNow: 'ផ្ញើសារទៅអភិបាលតាម Telegram',
+    subFailedTitle: 'ការផ្ទៀងផ្ទាត់មិនចប់ក្នុងពេលកំណត់',
+    subFailedBody:
+      'យើងមិនអាចបញ្ជាក់ការទូទាត់នេះក្នុងរយៈពេល ១ម៉ោងបានទេ។ សូមផ្ញើសារទៅអភិបាលតាម Telegram ជាមួយវិក្កយបត្ររបស់អ្នក ដើម្បីឱ្យយើងជួយដោះសោភ្លាមៗ។',
 
     // Locked episode row
     lockedVip: 'VIP',

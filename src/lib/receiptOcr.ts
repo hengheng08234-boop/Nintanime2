@@ -3,10 +3,18 @@ import { createWorker } from 'tesseract.js';
 /**
  * The name that must appear on a payment receipt screenshot for it to be
  * accepted as proof of payment. Kept as a single source of truth so the
- * same value is used on the client (for the fast first check) and can be
- * mirrored server-side (see supabase/functions/verify-payment-proof).
+ * same value is used on the client (for the fast first check) and is
+ * mirrored server-side in confirm_subscription_via_ocr, which never
+ * trusts the client's result and re-checks the raw OCR text itself.
  */
 export const RECEIPT_MATCH_PHRASE = 'PANG SOK HENG';
+
+/**
+ * A short reference tag that should also appear on the receipt/QR note
+ * (e.g. as the transfer memo) so a screenshot can't be reused for a
+ * different app or account. Also re-checked server-side.
+ */
+export const RECEIPT_REF_PHRASE = 'S2 NINT ANI';
 
 /** Normalize OCR output for a forgiving, typo-tolerant comparison. */
 function normalize(text: string): string {
@@ -56,17 +64,60 @@ function levenshtein(a: string, b: string): number {
   return dp[a.length][b.length];
 }
 
+/** Loosely matches DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, or "04 Aug 2026". */
+const DATE_PATTERN =
+  /\b(\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})\b/i;
+
+/** Loosely matches HH:MM or HH:MM:SS, optionally with AM/PM. */
+const TIME_PATTERN = /\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(AM|PM|am|pm)?\b/;
+
+function extractDate(rawText: string): string | null {
+  const match = rawText.match(DATE_PATTERN);
+  return match ? match[0] : null;
+}
+
+function extractTime(rawText: string): string | null {
+  const match = rawText.match(TIME_PATTERN);
+  return match ? match[0] : null;
+}
+
+/**
+ * Best-effort check of whether an extracted date string falls within
+ * `windowHours` of now. Returns null (unknown/unparseable) rather than
+ * false, since OCR date reads are unreliable and shouldn't hard-fail a
+ * genuine receipt on their own — recency is a supporting signal, not the
+ * primary gate (name + reference tag are).
+ */
+function isRecentDate(dateStr: string | null, windowHours = 48): boolean | null {
+  if (!dateStr) return null;
+  const normalized = dateStr.replace(/[.\-]/g, '/');
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const diffHours = Math.abs(Date.now() - parsed.getTime()) / (1000 * 60 * 60);
+  return diffHours <= windowHours;
+}
+
 export interface ReceiptOcrResult {
   rawText: string;
+  /** True only when both the name and the reference tag were found. */
   matched: boolean;
+  nameMatched: boolean;
+  refMatched: boolean;
+  dateText: string | null;
+  timeText: string | null;
+  /** true / false / null (couldn't parse a date on the receipt) */
+  dateRecent: boolean | null;
 }
 
 /**
  * Runs OCR on an uploaded receipt image and checks whether it contains the
- * required recipient name. This is a lightweight, best-effort check meant
- * to unlock VIP instantly for the common case — it is not a substitute for
+ * required recipient name and app reference tag, and pulls out a date/time
+ * if one is visible. This is a lightweight, best-effort check meant to
+ * unlock VIP instantly for the common case — it is not a substitute for
  * real payment-gateway verification, and the uploaded proof stays attached
- * to the request so an admin can audit or revoke it later if needed.
+ * to the request so an admin can audit or revoke it later if needed. The
+ * name + reference check is always re-verified server-side before anything
+ * is actually confirmed (see confirm_subscription_via_ocr).
  */
 export async function verifyReceiptScreenshot(file: File): Promise<ReceiptOcrResult> {
   const worker = await createWorker('eng');
@@ -75,8 +126,19 @@ export async function verifyReceiptScreenshot(file: File): Promise<ReceiptOcrRes
       data: { text },
     } = await worker.recognize(file);
     const normalized = normalize(text);
-    const matched = fuzzyContains(normalized, normalize(RECEIPT_MATCH_PHRASE));
-    return { rawText: text, matched };
+    const nameMatched = fuzzyContains(normalized, normalize(RECEIPT_MATCH_PHRASE));
+    const refMatched = fuzzyContains(normalized, normalize(RECEIPT_REF_PHRASE));
+    const dateText = extractDate(text);
+    const timeText = extractTime(text);
+    return {
+      rawText: text,
+      matched: nameMatched && refMatched,
+      nameMatched,
+      refMatched,
+      dateText,
+      timeText,
+      dateRecent: isRecentDate(dateText),
+    };
   } finally {
     await worker.terminate();
   }
