@@ -148,10 +148,46 @@ export default function HomeScreen({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A0A0F]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-[#0F8F72]" />
-          <p className="text-sm text-white/50">{t.loadingLibrary}</p>
+      <div className="min-h-screen bg-[#0A0A0F] text-white">
+        {/* Header skeleton */}
+        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-8 sm:py-3.5">
+          <div className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
+          <div className="flex flex-col gap-1.5">
+            <div className="h-3.5 w-24 animate-pulse rounded bg-white/10" />
+            <div className="hidden h-2 w-16 animate-pulse rounded bg-white/5 sm:block" />
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="hidden h-8 w-32 animate-pulse rounded-full bg-white/5 sm:block" />
+            <div className="h-8 w-24 animate-pulse rounded-full bg-white/5" />
+          </div>
+        </div>
+
+        {/* Hero skeleton */}
+        <div className="relative w-full overflow-hidden" style={{ height: 'min(52vh, 440px)' }}>
+          <div className="skeleton-shimmer absolute inset-0 bg-white/[0.03]" />
+          <div className="relative flex h-full items-center justify-center gap-3">
+            <div className="h-[62%] w-[22%] max-w-[140px] animate-pulse rounded-2xl bg-white/5" />
+            <div className="h-[78%] w-[38%] max-w-[190px] animate-pulse rounded-2xl bg-white/10" />
+            <div className="h-[62%] w-[22%] max-w-[140px] animate-pulse rounded-2xl bg-white/5" />
+          </div>
+        </div>
+
+        {/* Rail skeletons */}
+        <div className="mx-auto max-w-[1400px] px-4 pt-8 sm:px-8">
+          {[0, 1, 2].map((row) => (
+            <div key={row} className="mb-9">
+              <div className="mb-3 h-4 w-32 animate-pulse rounded bg-white/10" />
+              <div className="flex gap-4 overflow-hidden">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="aspect-[2/3] w-28 shrink-0 animate-pulse rounded-lg bg-white/5 sm:w-36"
+                    style={{ animationDelay: `${(row * 6 + i) * 60}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -184,7 +220,7 @@ export default function HomeScreen({
             className="pointer-events-none absolute inset-0 -z-10"
             style={{
               background:
-                'linear-gradient(180deg, rgba(10,10,15,0.75) 0%, rgba(10,10,15,0.15) 75%, rgba(10,10,15,0) 100%)',
+                'linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(10,10,15,0.45) 55%, rgba(10,10,15,0.1) 85%, rgba(10,10,15,0) 100%)',
             }}
           />
         )}
@@ -197,17 +233,23 @@ export default function HomeScreen({
             }}
             className="flex items-center gap-2.5"
           >
-            <img
-              src="/assets/images/logo-transparent.png"
-              alt="NINT ANIME"
-              className="h-9 w-9 drop-shadow-[0_0_14px_rgba(15,143,114,0.45)]"
-            />
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+              <div
+                className="pointer-events-none absolute inset-0 rounded-full opacity-70 blur-md"
+                style={{ background: 'radial-gradient(circle, rgba(15,143,114,0.55) 0%, rgba(15,143,114,0) 70%)' }}
+              />
+              <img
+                src="/assets/images/logo-transparent.png"
+                alt="NINT ANIME"
+                className="relative h-9 w-9 drop-shadow-[0_0_14px_rgba(15,143,114,0.45)]"
+              />
+            </div>
             <div className="flex flex-col leading-none">
               <span
-                className="text-lg font-black tracking-wider text-white"
+                className="text-lg font-black tracking-wider text-white sm:text-xl"
                 style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif' }}
               >
-                NINT ANIME
+                NINT <span className="text-[#0F8F72]">ANIME</span>
               </span>
               <span className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.2em] text-white/40 sm:inline">
                 {t.tagline}
@@ -216,7 +258,7 @@ export default function HomeScreen({
           </button>
 
           {/* Desktop nav links */}
-          <nav className="ml-4 hidden items-center gap-5 text-sm font-medium text-white/70 md:flex">
+          <nav className="ml-6 hidden items-center gap-5 text-sm font-medium text-white/70 md:flex">
             <span className="cursor-pointer text-white transition hover:text-[#0F8F72]">{t.navHome}</span>
             <span className="cursor-pointer transition hover:text-[#0F8F72]">{t.navSeries}</span>
             <span className="cursor-pointer transition hover:text-[#0F8F72]">{t.navMovies}</span>
@@ -234,16 +276,21 @@ export default function HomeScreen({
                 className="w-48 rounded-full border border-white/10 bg-white/[0.04] py-2 pl-9 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:w-64 focus:border-[#0F8F72]/50 focus:bg-white/[0.07]"
               />
             </div>
-            {/* Language switcher — visible on all screens */}
-            <LanguageSwitcher lang={lang} onChange={setLang} />
-            {/* Subscribe button — visible on all screens */}
-            <button
-              onClick={onOpenSubscription}
-              className="flex items-center gap-1.5 rounded-full border border-[#E8A94A]/30 bg-[#E8A94A]/10 px-3 py-1.5 text-xs font-bold text-[#E8A94A] transition hover:bg-[#E8A94A]/20"
-            >
-              <Crown className="h-3.5 w-3.5" />
-              <span>{subscribed ? t.premium : t.subscribe}</span>
-            </button>
+
+            {/* Language + subscribe grouped into one glass capsule so the
+                controls read as a single cohesive unit against the cover banner */}
+            <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.05] p-1 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
+              <LanguageSwitcher lang={lang} onChange={setLang} bare />
+              <span className="h-5 w-px bg-white/10" aria-hidden />
+              <button
+                onClick={onOpenSubscription}
+                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-[#E8A94A] transition hover:bg-[#E8A94A]/15"
+              >
+                <Crown className="h-3.5 w-3.5" />
+                <span>{subscribed ? t.premium : t.subscribe}</span>
+              </button>
+            </div>
+
             {/* Profile avatar — desktop only, mobile uses bottom nav */}
             <button
               onClick={onOpenProfile}
@@ -506,6 +553,7 @@ function CoverflowHero({
   t,
 }: CoverflowHeroProps) {
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const bg = hero.banner_url ?? hero.poster_url ?? '';
 
   // Reset the loaded flag whenever the background image changes so the
@@ -513,6 +561,18 @@ function CoverflowHero({
   useEffect(() => {
     setBgLoaded(false);
   }, [hero.id]);
+
+  // Ambient background drifts slower than the page (classic parallax) and
+  // fades out as the user scrolls past the hero into the content rails.
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const heroHeightPx = typeof window !== 'undefined' ? Math.min(window.innerHeight * 0.52, 440) : 440;
+  const parallaxOffset = Math.min(scrollY * 0.35, 120);
+  const parallaxOpacity = Math.max(1 - scrollY / heroHeightPx, 0);
 
   return (
     <section
@@ -522,7 +582,13 @@ function CoverflowHero({
       onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
     >
       {/* Blurred ambient background driven by the centered show */}
-      <div className="pointer-events-none absolute inset-0">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          transform: `translateY(${parallaxOffset}px)`,
+          opacity: parallaxOpacity,
+        }}
+      >
         {bg && (
           <img
             key={hero.id}
@@ -570,8 +636,9 @@ function CoverflowHero({
 
         {/* Center featured card */}
         <button
+          key={hero.id}
           onClick={() => onSelectShow(hero)}
-          className="relative z-20 flex flex-col items-center"
+          className="hero-card-enter relative z-20 flex flex-col items-center"
           style={{
             width: '38%',
             maxWidth: 190,
@@ -600,13 +667,18 @@ function CoverflowHero({
                   'linear-gradient(180deg, rgba(10,10,15,0) 42%, rgba(10,10,15,0.6) 74%, rgba(10,10,15,0.96) 100%)',
               }}
             />
-            {/* FEATURED pill */}
-            <span
-              className="absolute left-2.5 top-2.5 rounded-md px-2 py-[3px] text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #E8A94A, #FFAA3C)' }}
-            >
-              {t.featured}
-            </span>
+            {/* FEATURED pill + rank badge */}
+            <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5">
+              <span
+                className="rounded-md px-2 py-[3px] text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #E8A94A, #FFAA3C)' }}
+              >
+                {t.featured}
+              </span>
+              <span className="flex items-center gap-1 rounded-md bg-black/50 px-2 py-[3px] text-[10px] font-bold text-white backdrop-blur-sm">
+                🔥 #{index + 1}
+              </span>
+            </div>
             {/* Title + rating */}
             <div className="absolute inset-x-0 bottom-0 px-3 pb-3 text-center">
               <h2
@@ -649,14 +721,16 @@ function CoverflowHero({
 
       {/* Dot indicators */}
       {shows.length > 1 && (
-        <div className="absolute inset-x-0 bottom-3 z-30 flex justify-center gap-1.5">
+        <div className="absolute inset-x-0 bottom-3 z-30 flex justify-center gap-2">
           {shows.map((_, i) => (
             <button
               key={i}
               onClick={() => onGoTo(i)}
               aria-label={`Go to slide ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index ? 'w-5 bg-[#0F8F72]' : 'w-1.5 bg-white/40'
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === index
+                  ? 'w-6 bg-[#0F8F72] shadow-[0_0_10px_rgba(15,143,114,0.8)]'
+                  : 'w-2 bg-white/35 hover:bg-white/55'
               }`}
             />
           ))}

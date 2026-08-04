@@ -5,12 +5,16 @@ interface LanguageSwitcherProps {
   lang: Lang;
   onChange: (l: Lang) => void;
   className?: string;
+  /** Skip the default pill chrome (border/bg/padding) when nesting inside another glass container */
+  bare?: boolean;
 }
 
-export default function LanguageSwitcher({ lang, onChange, className = '' }: LanguageSwitcherProps) {
+export default function LanguageSwitcher({ lang, onChange, className = '', bare = false }: LanguageSwitcherProps) {
   return (
     <div
-      className={`flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-sm ${className}`}
+      className={`flex items-center gap-1 ${
+        bare ? '' : 'rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-sm'
+      } ${className}`}
       role="group"
       aria-label="Language"
     >
