@@ -13,6 +13,7 @@ import {
   Bookmark,
   Unlock,
   Sparkles,
+  Gift,
   X,
 } from 'lucide-react';
 import type { Show, ShowWithGenres, Genre } from '@/lib/types';
@@ -27,8 +28,12 @@ interface HomeScreenProps {
   onOpenProfile: () => void;
   onOpenSubscription: () => void;
   onOpenWatchlist: () => void;
+  onOpenRewards: () => void;
   avatarUrl: string | null;
   subscribed: boolean;
+  /** Whether a lucky-draw reward is still up for grabs — controls the
+   *  glowing gift badge next to Subscribe. `null` hides the badge. */
+  rewardsAvailable: 'guest' | 'spin-ready' | null;
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   searchOpen: boolean;
@@ -44,8 +49,10 @@ export default function HomeScreen({
   onOpenProfile,
   onOpenSubscription,
   onOpenWatchlist,
+  onOpenRewards,
   avatarUrl,
   subscribed,
+  rewardsAvailable,
   activeTab,
   setActiveTab,
   searchOpen,
@@ -273,6 +280,22 @@ export default function HomeScreen({
                 className="w-48 rounded-full border border-white/10 bg-white/[0.04] py-2 pl-9 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:w-64 focus:border-[#0F8F72]/50 focus:bg-white/[0.07]"
               />
             </div>
+
+            {/* Rewards / lucky-draw badge — sits right next to the
+                subscribe capsule so the free-VIP-spin offer stays visible
+                on the home screen even after the popup has been dismissed. */}
+            {rewardsAvailable && (
+              <button
+                onClick={onOpenRewards}
+                aria-label={t.rewardsBadge}
+                title={t.rewardsBadge}
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E8A94A]/30 bg-gradient-to-br from-[#E8A94A]/20 to-[#C98A2E]/10 text-[#E8A94A] backdrop-blur-md transition hover:scale-105 hover:bg-[#E8A94A]/25 animate-badge-pop"
+              >
+                <span className="absolute inset-0 rounded-full animate-glow-pulse" aria-hidden />
+                <Gift className="h-4 w-4" />
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#FF5D5D] ring-2 ring-[#0A0A0F]" aria-hidden />
+              </button>
+            )}
 
             {/* Language + subscribe grouped into one glass capsule so the
                 controls read as a single cohesive unit against the cover banner */}

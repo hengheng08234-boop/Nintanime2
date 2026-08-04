@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Gift, Sparkles, X } from 'lucide-react';
+import { Gift, PartyPopper, Sparkles, X } from 'lucide-react';
 import { claimNewMemberSpin, SPIN_TIERS } from '@/lib/luckyDraw';
 import { useLang } from '@/lib/useLang';
 import { appText } from '@/lib/appTranslations';
@@ -65,105 +65,121 @@ export default function LuckyDrawModal({ onClose, onClaimed }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
       onClick={result ? onClose : undefined}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-[#E8A94A]/25 bg-gradient-to-b from-[#141420] to-[#0A0A0F] p-6 text-center shadow-[0_0_60px_rgba(232,169,74,0.15)]"
+        className="promo-card-glow relative w-full max-w-sm rounded-3xl"
       >
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="pointer-events-none absolute -inset-6 rounded-[2.5rem] bg-[#E8A94A]/10 blur-3xl" />
 
-        <div className="mb-1 flex items-center justify-center gap-1.5 text-[#E8A94A]">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-xs font-bold uppercase tracking-[0.2em]">{t.spinEyebrow}</span>
-          <Sparkles className="h-4 w-4" />
-        </div>
-        <h2
-          className="mb-4 text-2xl font-black text-white"
-          style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif' }}
-        >
-          {t.spinTitle}
-        </h2>
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#171725] to-[#0A0A0F] p-6 text-center shadow-[0_0_70px_rgba(232,169,74,0.2)]">
+          <Sparkles className="sparkle-twinkle pointer-events-none absolute left-5 top-5 h-3.5 w-3.5 text-[#E8A94A]/50" />
+          <Sparkles
+            className="sparkle-twinkle pointer-events-none absolute right-14 top-8 h-2.5 w-2.5 text-[#0F8F72]/60"
+            style={{ animationDelay: '0.5s' }}
+          />
 
-        {/* Wheel */}
-        <div className="relative mx-auto mb-5 h-64 w-64">
-          {/* Pointer */}
-          <div className="absolute left-1/2 top-[-6px] z-10 h-6 w-6 -translate-x-1/2 rotate-180">
-            <div
-              className="h-0 w-0 border-x-[10px] border-t-[16px] border-x-transparent border-t-[#E8A94A]"
-              style={{ transform: 'rotate(180deg)' }}
-            />
-          </div>
-
-          <div
-            ref={wheelRef}
-            className="relative h-full w-full rounded-full border-4 border-[#E8A94A]/60 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transition: spinning ? 'transform 4.2s cubic-bezier(0.17,0.67,0.16,0.99)' : 'none',
-              background: `conic-gradient(${SPIN_TIERS.map(
-                (_, i) =>
-                  `${WEDGE_COLORS[i]} ${i * SEGMENT_DEG}deg ${(i + 1) * SEGMENT_DEG}deg`,
-              ).join(', ')})`,
-            }}
-          >
-            {SPIN_TIERS.map((tier, i) => {
-              const angle = i * SEGMENT_DEG + SEGMENT_DEG / 2;
-              return (
-                <div
-                  key={tier.days}
-                  className="absolute left-1/2 top-1/2 h-0 w-0 origin-top-left"
-                  style={{ transform: `rotate(${angle}deg)` }}
-                >
-                  <span
-                    className="absolute -translate-x-1/2 text-[11px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
-                    style={{ top: '-108px' }}
-                  >
-                    {tier.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Hub */}
-          <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-[#0A0A0F] bg-gradient-to-br from-[#E8A94A] to-[#C98A2E] shadow-lg">
-            <Gift className="h-6 w-6 text-[#0A0A0F]" />
-          </div>
-        </div>
-
-        {error && (
-          <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>
-        )}
-
-        {result ? (
-          <div className="space-y-3">
-            <p className="text-lg font-bold text-[#E8A94A]">
-              {t.spinWonPrefix} {result.label} {t.spinWonSuffixVip}
-            </p>
-            <button
-              onClick={onClose}
-              className="w-full rounded-full bg-gradient-to-r from-[#0F8F72] to-[#0BB88F] py-3 text-sm font-bold text-white transition hover:opacity-90"
-            >
-              {t.spinCollect}
-            </button>
-          </div>
-        ) : (
           <button
-            onClick={spin}
-            disabled={spinning || !!error}
-            className="w-full rounded-full bg-gradient-to-r from-[#E8A94A] to-[#C98A2E] py-3 text-sm font-bold text-[#0A0A0F] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
+            aria-label="Close"
           >
-            {spinning ? t.spinSpinning : t.spinButton}
+            <X className="h-4 w-4" />
           </button>
-        )}
+
+          <div className="mb-1 flex items-center justify-center gap-1.5 text-[#E8A94A]">
+            <Sparkles className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-[0.2em]">{t.spinEyebrow}</span>
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <h2
+            className="mb-4 text-2xl font-black text-white"
+            style={{ fontFamily: '"Bebas Neue", Battambang, Inter, sans-serif' }}
+          >
+            {t.spinTitle}
+          </h2>
+
+          {/* Wheel */}
+          <div className="relative mx-auto mb-5 h-64 w-64">
+            {/* Ambient glow behind the wheel */}
+            <div className="pointer-events-none absolute inset-[-14px] rounded-full bg-[#E8A94A]/15 blur-2xl" />
+
+            {/* Pointer */}
+            <div className="absolute left-1/2 top-[-8px] z-10 h-7 w-7 -translate-x-1/2 rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+              <div
+                className="h-0 w-0 border-x-[11px] border-t-[18px] border-x-transparent border-t-[#E8A94A]"
+                style={{ transform: 'rotate(180deg)' }}
+              />
+            </div>
+
+            <div
+              ref={wheelRef}
+              className="relative h-full w-full rounded-full border-4 border-[#E8A94A]/60 shadow-[0_0_50px_rgba(232,169,74,0.25),0_0_40px_rgba(0,0,0,0.5)]"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transition: spinning ? 'transform 4.2s cubic-bezier(0.17,0.67,0.16,0.99)' : 'none',
+                background: `conic-gradient(${SPIN_TIERS.map(
+                  (_, i) =>
+                    `${WEDGE_COLORS[i]} ${i * SEGMENT_DEG}deg ${(i + 1) * SEGMENT_DEG}deg`,
+                ).join(', ')})`,
+              }}
+            >
+              {SPIN_TIERS.map((tier, i) => {
+                const angle = i * SEGMENT_DEG + SEGMENT_DEG / 2;
+                return (
+                  <div
+                    key={tier.days}
+                    className="absolute left-1/2 top-1/2 h-0 w-0 origin-top-left"
+                    style={{ transform: `rotate(${angle}deg)` }}
+                  >
+                    <span
+                      className="absolute -translate-x-1/2 text-[11px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                      style={{ top: '-108px' }}
+                    >
+                      {tier.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Hub */}
+            <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-[#0A0A0F] bg-gradient-to-br from-[#E8A94A] to-[#C98A2E] shadow-lg">
+              <Gift className={`h-6 w-6 text-[#0A0A0F] ${spinning ? '' : 'gift-float'}`} />
+            </div>
+          </div>
+
+          {error && (
+            <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>
+          )}
+
+          {result ? (
+            <div className="win-pop-in space-y-3">
+              <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-[#E8A94A]/30 bg-[#E8A94A]/10 px-4 py-1.5">
+                <PartyPopper className="h-4 w-4 text-[#E8A94A]" />
+                <p className="text-base font-bold text-[#E8A94A]">
+                  {t.spinWonPrefix} {result.label} {t.spinWonSuffixVip}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full rounded-full bg-gradient-to-r from-[#0F8F72] to-[#0BB88F] py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(15,143,114,0.35)] transition hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(15,143,114,0.5)] active:scale-[0.98]"
+              >
+                {t.spinCollect}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={spin}
+              disabled={spinning || !!error}
+              className="w-full rounded-full bg-gradient-to-r from-[#E8A94A] to-[#C98A2E] py-3.5 text-sm font-bold text-[#0A0A0F] shadow-[0_8px_24px_rgba(232,169,74,0.35)] transition hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(232,169,74,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {spinning ? t.spinSpinning : t.spinButton}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

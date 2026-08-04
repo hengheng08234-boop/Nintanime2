@@ -12,18 +12,18 @@ interface LanguageSwitcherProps {
 export default function LanguageSwitcher({ lang, onChange, className = '', bare = false }: LanguageSwitcherProps) {
   return (
     <div
-      className={`flex items-center gap-1 ${
-        bare ? '' : 'rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-sm'
+      className={`flex items-center gap-0.5 ${
+        bare ? '' : 'rounded-full border border-white/10 bg-white/[0.04] p-0.5 backdrop-blur-sm'
       } ${className}`}
       role="group"
       aria-label="Language"
     >
-      <Globe className="ml-2 h-3.5 w-3.5 text-white/40" />
+      <Globe className="ml-1.5 h-3 w-3 shrink-0 text-white/40" />
       <button
         type="button"
         onClick={() => onChange('km')}
         aria-pressed={lang === 'km'}
-        className={`rounded-full px-3 py-1 text-xs font-semibold transition font-khmer ${
+        className={`rounded-full px-2 py-1 text-[10px] font-semibold leading-none transition font-khmer ${
           lang === 'km' ? 'bg-[#4CC950] text-black' : 'text-white/60 hover:text-white'
         }`}
       >
@@ -33,11 +33,11 @@ export default function LanguageSwitcher({ lang, onChange, className = '', bare 
         type="button"
         onClick={() => onChange('en')}
         aria-pressed={lang === 'en'}
-        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+        className={`rounded-full px-2 py-1 text-[10px] font-semibold leading-none transition ${
           lang === 'en' ? 'bg-[#4CC950] text-black' : 'text-white/60 hover:text-white'
         }`}
       >
-        English
+        EN
       </button>
     </div>
   );
