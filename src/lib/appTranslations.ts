@@ -212,15 +212,19 @@ export const appText = {
     subQrGenericError: 'Something went wrong. Please try again.',
     subNotSignedIn: 'Please sign in again to continue.',
     subManualIntro:
-      'Scan the QR with your banking app, then upload a screenshot of the receipt for verification.',
+      'Scan the QR with your banking app, then upload a screenshot of the receipt — our system checks it automatically.',
     subIvePaidUpload: 'Upload Receipt',
     subCheckNameLabel: 'Recipient name',
     subCheckRefLabel: 'App reference tag',
     subCheckDateLabel: 'Payment date/time',
     subCheckAmountLabel: 'Payment amount',
+    subCheckTranIdLabel: 'Transaction code',
+    subDuplicateTitle: 'This receipt was already used',
+    subDuplicateBody:
+      'This transaction code has already unlocked VIP on another account. If you think this is a mistake, message admin on Telegram.',
     subPendingTitle: 'Sent for review',
     subPendingBody:
-      "Your receipt has been sent to our team for review. This is usually quick, but can take up to 1 hour.",
+      "We couldn't auto-match your screenshot, so it's been sent to our team. This is usually quick, but can take up to 1 hour.",
     subPendingWaiting: 'Checking with admin…',
     subContactAdminNow: 'Message Admin on Telegram',
     subFailedTitle: "Verification didn't complete in time",
@@ -468,15 +472,19 @@ export const appText = {
     subQrGenericError: 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្ដងទៀត។',
     subNotSignedIn: 'សូមចូលគណនីម្ដងទៀតដើម្បីបន្ត។',
     subManualIntro:
-      'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ ដើម្បីធ្វើការផ្ទៀងផ្ទាត់។',
+      'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ — ប្រព័ន្ធរបស់យើងនឹងពិនិត្យដោយស្វ័យប្រវត្តិ។',
     subIvePaidUpload: 'អាប់ឡូតវិក្កយបត្រ',
     subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
     subCheckRefLabel: 'លេខកូដយោង (App)',
     subCheckDateLabel: 'ថ្ងៃ/ម៉ោង ទូទាត់',
     subCheckAmountLabel: 'ចំនួនប្រាក់ទូទាត់',
+    subCheckTranIdLabel: 'លេខកូដប្រតិបត្តិការ',
+    subDuplicateTitle: 'វិក្កយបត្រនេះត្រូវបានប្រើប្រាស់រួចហើយ',
+    subDuplicateBody:
+      'លេខកូដប្រតិបត្តិការនេះធ្លាប់ត្រូវបានប្រើដើម្បីដោះសោ VIP នៅគណនីមួយផ្សេងទៀតរួចហើយ។ ប្រសិនបើអ្នកគិតថានេះជាកំហុស សូមផ្ញើសារទៅអភិបាលតាម Telegram។',
     subPendingTitle: 'បានផ្ញើសម្រាប់ពិនិត្យ',
     subPendingBody:
-      'វិក្កយបត្ររបស់អ្នកត្រូវបានផ្ញើទៅឱ្យក្រុមការងាររបស់យើងពិនិត្យ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
+      'ប្រព័ន្ធមិនអាចផ្គូផ្គងរូបភាពដោយស្វ័យប្រវត្តិបានទេ ដូច្នេះបានផ្ញើទៅក្រុមការងារជំនួយ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
     subPendingWaiting: 'កំពុងពិនិត្យជាមួយអភិបាល…',
     subContactAdminNow: 'ផ្ញើសារទៅអភិបាលតាម Telegram',
     subFailedTitle: 'ការផ្ទៀងផ្ទាត់មិនចប់ក្នុងពេលកំណត់',

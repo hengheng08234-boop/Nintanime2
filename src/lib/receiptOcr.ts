@@ -71,6 +71,19 @@ const DATE_PATTERN =
 /** Loosely matches HH:MM or HH:MM:SS, optionally with AM/PM. */
 const TIME_PATTERN = /\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(AM|PM|am|pm)?\b/;
 
+/**
+ * Matches a bank/PayWay transaction (or "hash") ID printed on the receipt,
+ * e.g. "Tran ID: FT26123ABCDEF", "Transaction ID 000123456789", or a bare
+ * 8+ character alphanumeric code near the word TRAN/TRANSACTION/HASH/REF.
+ * This is the one field on a real receipt that's unique per payment, so
+ * unlike the name/reference/amount (which are the same on every receipt
+ * and can be typed into a photo editor by anyone) it's what lets the
+ * server tell a genuine one-time payment apart from the same screenshot
+ * being replayed to claim VIP more than once.
+ */
+const TRAN_ID_PATTERN =
+  /\b(?:TRAN(?:SACTION)?\s*(?:ID|NO|NUMBER)?|HASH|REF(?:ERENCE)?\s*(?:ID|NO)?)[:.\s]*([A-Z0-9]{6,})\b/i;
+
 function extractDate(rawText: string): string | null {
   const match = rawText.match(DATE_PATTERN);
   return match ? match[0] : null;
@@ -79,6 +92,19 @@ function extractDate(rawText: string): string | null {
 function extractTime(rawText: string): string | null {
   const match = rawText.match(TIME_PATTERN);
   return match ? match[0] : null;
+}
+
+/**
+ * Best-effort extraction of a unique transaction ID from the receipt.
+ * Returns null when nothing that looks like one was found — this is
+ * common (OCR miss, or the bank's app doesn't print one clearly), and a
+ * miss is treated as "unknown", not "fraud": only an *exact match with an
+ * already-confirmed request* (checked server-side, see
+ * confirm_subscription_via_ocr) is treated as reuse.
+ */
+function extractTransactionId(rawText: string): string | null {
+  const match = rawText.match(TRAN_ID_PATTERN);
+  return match ? match[1].toUpperCase() : null;
 }
 
 /**
@@ -121,6 +147,13 @@ export interface ReceiptOcrResult {
   timeText: string | null;
   /** true / false / null (couldn't parse a date on the receipt) */
   dateRecent: boolean | null;
+  /**
+   * Unique transaction/hash code read off the receipt, if any was found.
+   * Null just means OCR didn't spot one — it does not block instant
+   * unlock on its own. The server checks it for reuse against past
+   * confirmed requests when it's present.
+   */
+  tranId: string | null;
 }
 
 /**
@@ -149,6 +182,7 @@ export async function verifyReceiptScreenshot(
     const amountMatched = amountAppears(text, expectedAmount);
     const dateText = extractDate(text);
     const timeText = extractTime(text);
+    const tranId = extractTransactionId(text);
     return {
       rawText: text,
       matched: nameMatched && refMatched && amountMatched !== false,
@@ -158,6 +192,7 @@ export async function verifyReceiptScreenshot(
       dateText,
       timeText,
       dateRecent: isRecentDate(dateText),
+      tranId,
     };
   } finally {
     await worker.terminate();
