@@ -82,6 +82,18 @@ function extractTime(rawText: string): string | null {
 }
 
 /**
+ * Checks whether the expected plan price (e.g. 2 -> "2.00") appears
+ * anywhere in the raw OCR text, ignoring commas/currency symbols/spaces.
+ * Returns null when no expected amount was supplied (nothing to check).
+ */
+function amountAppears(rawText: string, expectedAmount: number | undefined): boolean | null {
+  if (expectedAmount === undefined || expectedAmount === null) return null;
+  const target = expectedAmount.toFixed(2);
+  const cleanedDigits = rawText.replace(/[,$\s]/g, '');
+  return cleanedDigits.includes(target);
+}
+
+/**
  * Best-effort check of whether an extracted date string falls within
  * `windowHours` of now. Returns null (unknown/unparseable) rather than
  * false, since OCR date reads are unreliable and shouldn't hard-fail a
@@ -99,10 +111,12 @@ function isRecentDate(dateStr: string | null, windowHours = 48): boolean | null 
 
 export interface ReceiptOcrResult {
   rawText: string;
-  /** True only when both the name and the reference tag were found. */
+  /** True only when the name, reference tag, AND amount all check out. */
   matched: boolean;
   nameMatched: boolean;
   refMatched: boolean;
+  /** true / false / null (no expected amount was passed in to check against) */
+  amountMatched: boolean | null;
   dateText: string | null;
   timeText: string | null;
   /** true / false / null (couldn't parse a date on the receipt) */
@@ -111,15 +125,19 @@ export interface ReceiptOcrResult {
 
 /**
  * Runs OCR on an uploaded receipt image and checks whether it contains the
- * required recipient name and app reference tag, and pulls out a date/time
- * if one is visible. This is a lightweight, best-effort check meant to
- * unlock VIP instantly for the common case — it is not a substitute for
- * real payment-gateway verification, and the uploaded proof stays attached
- * to the request so an admin can audit or revoke it later if needed. The
- * name + reference check is always re-verified server-side before anything
- * is actually confirmed (see confirm_subscription_via_ocr).
+ * required recipient name, app reference tag, and (if an expected amount is
+ * passed) the plan's price — and pulls out a date/time if one is visible.
+ * This is a lightweight, best-effort check meant to unlock VIP instantly
+ * for the common case — it is not a substitute for real payment-gateway
+ * verification, and the uploaded proof stays attached to the request so an
+ * admin can audit or revoke it later if needed. The name + reference +
+ * amount check is always re-verified server-side before anything is
+ * actually confirmed (see confirm_subscription_via_ocr).
  */
-export async function verifyReceiptScreenshot(file: File): Promise<ReceiptOcrResult> {
+export async function verifyReceiptScreenshot(
+  file: File,
+  expectedAmount?: number,
+): Promise<ReceiptOcrResult> {
   const worker = await createWorker('eng');
   try {
     const {
@@ -128,13 +146,15 @@ export async function verifyReceiptScreenshot(file: File): Promise<ReceiptOcrRes
     const normalized = normalize(text);
     const nameMatched = fuzzyContains(normalized, normalize(RECEIPT_MATCH_PHRASE));
     const refMatched = fuzzyContains(normalized, normalize(RECEIPT_REF_PHRASE));
+    const amountMatched = amountAppears(text, expectedAmount);
     const dateText = extractDate(text);
     const timeText = extractTime(text);
     return {
       rawText: text,
-      matched: nameMatched && refMatched,
+      matched: nameMatched && refMatched && amountMatched !== false,
       nameMatched,
       refMatched,
+      amountMatched,
       dateText,
       timeText,
       dateRecent: isRecentDate(dateText),

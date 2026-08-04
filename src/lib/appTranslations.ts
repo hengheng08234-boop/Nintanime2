@@ -216,6 +216,7 @@ export const appText = {
     subCheckNameLabel: 'Recipient name',
     subCheckRefLabel: 'App reference tag',
     subCheckDateLabel: 'Payment date/time',
+    subCheckAmountLabel: 'Payment amount',
     subPendingTitle: 'Sent for review',
     subPendingBody:
       "We couldn't auto-match your screenshot, so it's been sent to our team. This is usually quick, but can take up to 1 hour.",
@@ -470,6 +471,7 @@ export const appText = {
     subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
     subCheckRefLabel: 'លេខកូដយោង (App)',
     subCheckDateLabel: 'ថ្ងៃ/ម៉ោង ទូទាត់',
+    subCheckAmountLabel: 'ចំនួនប្រាក់ទូទាត់',
     subPendingTitle: 'បានផ្ញើសម្រាប់ពិនិត្យ',
     subPendingBody:
       'ប្រព័ន្ធមិនអាចផ្គូផ្គងរូបភាពដោយស្វ័យប្រវត្តិបានទេ ដូច្នេះបានផ្ញើទៅក្រុមការងារជំនួយ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
