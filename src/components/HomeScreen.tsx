@@ -215,15 +215,12 @@ export default function HomeScreen({
           heroVisible ? 'bg-transparent' : 'bg-[#0A0A0F]/85 backdrop-blur-md'
         }`}
       >
-        {heroVisible && (
-          <div
-            className="pointer-events-none absolute inset-0 -z-10"
-            style={{
-              background:
-                'linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(10,10,15,0.45) 55%, rgba(10,10,15,0.1) 85%, rgba(10,10,15,0) 100%)',
-            }}
-          />
-        )}
+        {/* No separate dark overlay here on purpose — the coverflow hero
+            underneath already fades to dark at its top edge (see
+            CoverflowHero's gradient below), so the header sits directly on
+            top of that same fade instead of painting a second one, which
+            let the banner image show through cleanly right behind the logo
+            and controls instead of washing out to a flat black bar. */}
         <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-8 sm:py-3.5">
           {/* Logo mark + wordmark + tagline */}
           <button
@@ -614,7 +611,7 @@ function CoverflowHero({
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(10,10,15,0) 20%, rgba(10,10,15,0) 68%, rgba(10,10,15,1) 100%)',
+              'linear-gradient(180deg, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.55) 14%, rgba(10,10,15,0.1) 28%, rgba(10,10,15,0) 40%, rgba(10,10,15,0) 68%, rgba(10,10,15,1) 100%)',
           }}
         />
       </div>
