@@ -73,3 +73,44 @@ body {
 .hero-bg.loaded {
   opacity: 1;
 }
+
+/* Skeleton shimmer sweep used by the home screen loading state */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 70%
+  );
+  animation: shimmer-sweep 1.8s ease-in-out infinite;
+}
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Featured hero card: gentle scale + fade whenever the centered show changes */
+.hero-card-enter {
+  animation: hero-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes hero-card-in {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
