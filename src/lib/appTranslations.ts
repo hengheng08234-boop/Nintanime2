@@ -212,7 +212,7 @@ export const appText = {
     subQrGenericError: 'Something went wrong. Please try again.',
     subNotSignedIn: 'Please sign in again to continue.',
     subManualIntro:
-      'Scan the QR with your banking app, then upload a screenshot of the receipt — our system checks it automatically.',
+      'Scan the QR with your banking app, then upload a screenshot of the receipt for verification.',
     subIvePaidUpload: 'Upload Receipt',
     subCheckNameLabel: 'Recipient name',
     subCheckRefLabel: 'App reference tag',
@@ -220,7 +220,7 @@ export const appText = {
     subCheckAmountLabel: 'Payment amount',
     subPendingTitle: 'Sent for review',
     subPendingBody:
-      "We couldn't auto-match your screenshot, so it's been sent to our team. This is usually quick, but can take up to 1 hour.",
+      "Your receipt has been sent to our team for review. This is usually quick, but can take up to 1 hour.",
     subPendingWaiting: 'Checking with admin…',
     subContactAdminNow: 'Message Admin on Telegram',
     subFailedTitle: "Verification didn't complete in time",
@@ -468,7 +468,7 @@ export const appText = {
     subQrGenericError: 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្ដងទៀត។',
     subNotSignedIn: 'សូមចូលគណនីម្ដងទៀតដើម្បីបន្ត។',
     subManualIntro:
-      'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ — ប្រព័ន្ធរបស់យើងនឹងពិនិត្យដោយស្វ័យប្រវត្តិ។',
+      'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ ដើម្បីធ្វើការផ្ទៀងផ្ទាត់។',
     subIvePaidUpload: 'អាប់ឡូតវិក្កយបត្រ',
     subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
     subCheckRefLabel: 'លេខកូដយោង (App)',
@@ -476,7 +476,7 @@ export const appText = {
     subCheckAmountLabel: 'ចំនួនប្រាក់ទូទាត់',
     subPendingTitle: 'បានផ្ញើសម្រាប់ពិនិត្យ',
     subPendingBody:
-      'ប្រព័ន្ធមិនអាចផ្គូផ្គងរូបភាពដោយស្វ័យប្រវត្តិបានទេ ដូច្នេះបានផ្ញើទៅក្រុមការងារជំនួយ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
+      'វិក្កយបត្ររបស់អ្នកត្រូវបានផ្ញើទៅឱ្យក្រុមការងាររបស់យើងពិនិត្យ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',
     subPendingWaiting: 'កំពុងពិនិត្យជាមួយអភិបាល…',
     subContactAdminNow: 'ផ្ញើសារទៅអភិបាលតាម Telegram',
     subFailedTitle: 'ការផ្ទៀងផ្ទាត់មិនចប់ក្នុងពេលកំណត់',
