@@ -86,7 +86,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Step = 'summary' | 'qr' | 'upload' | 'checking' | 'pending' | 'success' | 'failed';
+type Step = 'summary' | 'qr' | 'upload' | 'checking' | 'mismatch' | 'pending' | 'success' | 'failed';
 
 export default function SubscriptionModal({ onClose }: Props) {
   const { lang } = useLang();
@@ -206,7 +206,7 @@ export default function SubscriptionModal({ onClose }: Props) {
       }
 
       const [result, url] = await Promise.all([
-        verifyReceiptScreenshot(file),
+        verifyReceiptScreenshot(file, selectedPlan.price),
         uploadProof(file, userData.user.id),
       ]);
       setOcrResult(result);
@@ -235,6 +235,23 @@ export default function SubscriptionModal({ onClose }: Props) {
         return;
       }
 
+      if (!result.nameMatched && !result.refMatched) {
+        // Neither signal was found at all — this isn't a borderline OCR
+        // misread, it's almost certainly the wrong screenshot (wrong
+        // account, wrong app, or not a receipt). Tell the person right
+        // away instead of making them wait up to an hour for admin review.
+        setStep('mismatch');
+        return;
+      }
+
+      if (result.amountMatched === false) {
+        // Name/reference look right but the amount on the receipt doesn't
+        // match the selected plan — likely paid for a different plan.
+        // Reject immediately rather than auto-unlocking the wrong tier.
+        setStep('mismatch');
+        return;
+      }
+
       await sendForReview(userData.user.id, url, result);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.subQrGenericError);
@@ -246,6 +263,7 @@ export default function SubscriptionModal({ onClose }: Props) {
     const notes = [
       !result.nameMatched && 'name not detected',
       !result.refMatched && 'reference tag not detected',
+      result.amountMatched === false && 'amount does not match selected plan',
       result.dateText ? `date on receipt: ${result.dateText}` : 'no date detected',
       result.timeText ? `time on receipt: ${result.timeText}` : 'no time detected',
     ]
@@ -499,12 +517,68 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.02] p-3">
                   <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
                   <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
+                  <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
                   <CheckRow
                     ok={ocrResult.dateText ? ocrResult.dateRecent ?? null : null}
                     label={ocrResult.dateText ? `${t.subCheckDateLabel}: ${ocrResult.dateText}` : t.subCheckDateLabel}
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* STEP: mismatch (receipt clearly doesn't match — reject immediately) */}
+          {step === 'mismatch' && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 py-6 text-center">
+              <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EF4444]/15">
+                <XCircle size={28} className="text-[#EF4444]" />
+              </div>
+              <p className="text-[12px] font-bold text-white">{t.subVerifyFailed}</p>
+              <p className="mt-1.5 px-3 text-[10.5px] leading-relaxed text-white/50">{t.subVerifyFailedDesc}</p>
+
+              {ocrResult && (
+                <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 text-left">
+                  <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
+                  <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
+                  <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
+                </div>
+              )}
+
+              <div className="mt-4 grid grid-cols-1 gap-2">
+                <button
+                  onClick={() => {
+                    setError('');
+                    setOcrResult(null);
+                    setStep('upload');
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
+                  style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                >
+                  <RefreshCw size={13} />
+                  {t.subRetryUpload}
+                </button>
+                <button
+                  onClick={async () => {
+                    const { data: userData } = await supabase.auth.getUser();
+                    if (userData.user && proofUrl && ocrResult) {
+                      await sendForReview(userData.user.id, proofUrl, ocrResult);
+                    }
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                >
+                  <Upload size={13} />
+                  {t.subSendForReview}
+                </button>
+                <a
+                  href={ADMIN_TELEGRAM_LINK}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                >
+                  <Send size={13} />
+                  {t.subContactAdminNow}
+                </a>
+              </div>
             </div>
           )}
 
@@ -521,6 +595,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 text-left">
                   <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
                   <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
+                  <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
                 </div>
               )}
 
