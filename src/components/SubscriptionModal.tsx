@@ -150,7 +150,15 @@ export default function SubscriptionModal({ onClose }: Props) {
 
   const uploadProof = async (file: File, userId: string) => {
     const ext = file.name.split('.').pop() || 'jpg';
-    const path = `subscription-proofs/${userId}-${Date.now()}.${ext}`;
+    // The `avatars` bucket's RLS policy only allows a path whose FIRST
+    // folder segment equals the uploader's own auth.uid() — e.g. avatar
+    // uploads go to `${userId}/avatar.ext`. This used to upload to
+    // `subscription-proofs/${userId}-...` instead (userId was in the
+    // filename, not the leading folder), which always failed that check
+    // with "new row violates row-level security policy". Nesting under
+    // `${userId}/...` first satisfies the existing policy with no new
+    // migration needed.
+    const path = `${userId}/subscription-proofs/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(path, file, { upsert: true });
