@@ -232,8 +232,9 @@ export default function SubscriptionModal({ onClose }: Props) {
           },
         );
         if (rpcError || !confirmed) {
-          // Server-side re-check disagreed (or a network hiccup) — fall
-          // back to the human review queue rather than silently failing.
+          // Server-side re-check disagreed (or a network hiccup) on a
+          // receipt that otherwise looked fully valid — queue this one
+          // specific case for admin review rather than silently failing.
           await sendForReview(userData.user.id, url, result);
           return;
         }
@@ -243,24 +244,12 @@ export default function SubscriptionModal({ onClose }: Props) {
         return;
       }
 
-      if (!result.nameMatched && !result.refMatched) {
-        // Neither signal was found at all — this isn't a borderline OCR
-        // misread, it's almost certainly the wrong screenshot (wrong
-        // account, wrong app, or not a receipt). Tell the person right
-        // away instead of making them wait up to an hour for admin review.
-        setStep('mismatch');
-        return;
-      }
-
-      if (result.amountMatched === false) {
-        // Name/reference look right but the amount on the receipt doesn't
-        // match the selected plan — likely paid for a different plan.
-        // Reject immediately rather than auto-unlocking the wrong tier.
-        setStep('mismatch');
-        return;
-      }
-
-      await sendForReview(userData.user.id, url, result);
+      // Any receipt that isn't a full, clean match — missing name,
+      // missing reference tag, or a mismatched amount — is rejected
+      // immediately instead of being queued for review. This keeps the
+      // review step meaning what it says: only receipts that were
+      // actually confirmed but hit a re-check hiccup wait there.
+      setStep('mismatch');
     } catch (err) {
       setError(err instanceof Error ? err.message : t.subQrGenericError);
       setStep('upload');
