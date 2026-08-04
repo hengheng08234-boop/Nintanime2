@@ -98,10 +98,18 @@ export default function AdminScreen({ onBack }: AdminScreenProps) {
       setLoading(false);
       return;
     }
+    // supabase-js only sorts by ONE column per .order() call — a
+    // comma-joined string like 'show_id, season, episode_number' is NOT
+    // valid multi-column sorting, it silently falls back to insertion
+    // order. Chain .order() per column so episodes always line up by
+    // number regardless of the order they were uploaded in (e.g.
+    // uploading ep5, ep6, then ep4 still lists as ep4, ep5, ep6).
     const { data: epData, error: epErr } = await supabase
       .from('episodes')
       .select('*')
-      .order('show_id, season, episode_number');
+      .order('show_id', { ascending: true })
+      .order('season', { ascending: true })
+      .order('episode_number', { ascending: true });
     if (epErr) {
       setError(epErr.message);
       setLoading(false);
