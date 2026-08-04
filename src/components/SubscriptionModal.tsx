@@ -86,7 +86,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Step = 'summary' | 'qr' | 'upload' | 'checking' | 'mismatch' | 'pending' | 'success' | 'failed';
+type Step = 'summary' | 'qr' | 'upload' | 'checking' | 'mismatch' | 'duplicate' | 'pending' | 'success' | 'failed';
 
 export default function SubscriptionModal({ onClose }: Props) {
   const { lang } = useLang();
@@ -150,15 +150,7 @@ export default function SubscriptionModal({ onClose }: Props) {
 
   const uploadProof = async (file: File, userId: string) => {
     const ext = file.name.split('.').pop() || 'jpg';
-    // The `avatars` bucket's RLS policy only allows a path whose FIRST
-    // folder segment equals the uploader's own auth.uid() — e.g. avatar
-    // uploads go to `${userId}/avatar.ext`. This used to upload to
-    // `subscription-proofs/${userId}-...` instead (userId was in the
-    // filename, not the leading folder), which always failed that check
-    // with "new row violates row-level security policy". Nesting under
-    // `${userId}/...` first satisfies the existing policy with no new
-    // migration needed.
-    const path = `${userId}/subscription-proofs/${Date.now()}.${ext}`;
+    const path = `subscription-proofs/${userId}-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(path, file, { upsert: true });
@@ -229,12 +221,21 @@ export default function SubscriptionModal({ onClose }: Props) {
             p_proof_url: url,
             p_ocr_text: result.rawText,
             p_bonus_days: 10,
+            p_tran_id: result.tranId,
           },
         );
+        if (rpcError?.message?.includes('tran_id_reused')) {
+          // Checkpoint 4 failed: this exact receipt (by its transaction
+          // ID) was already used to confirm a different account. Name,
+          // reference, and amount all matched — a photo-edited screenshot
+          // can pass those — but the transaction ID can't be reused, so
+          // this goes straight to "already used", not the admin queue.
+          setStep('duplicate');
+          return;
+        }
         if (rpcError || !confirmed) {
-          // Server-side re-check disagreed (or a network hiccup) on a
-          // receipt that otherwise looked fully valid — queue this one
-          // specific case for admin review rather than silently failing.
+          // Server-side re-check disagreed (or a network hiccup) — fall
+          // back to the human review queue rather than silently failing.
           await sendForReview(userData.user.id, url, result);
           return;
         }
@@ -244,12 +245,24 @@ export default function SubscriptionModal({ onClose }: Props) {
         return;
       }
 
-      // Any receipt that isn't a full, clean match — missing name,
-      // missing reference tag, or a mismatched amount — is rejected
-      // immediately instead of being queued for review. This keeps the
-      // review step meaning what it says: only receipts that were
-      // actually confirmed but hit a re-check hiccup wait there.
-      setStep('mismatch');
+      if (!result.nameMatched && !result.refMatched) {
+        // Neither signal was found at all — this isn't a borderline OCR
+        // misread, it's almost certainly the wrong screenshot (wrong
+        // account, wrong app, or not a receipt). Tell the person right
+        // away instead of making them wait up to an hour for admin review.
+        setStep('mismatch');
+        return;
+      }
+
+      if (result.amountMatched === false) {
+        // Name/reference look right but the amount on the receipt doesn't
+        // match the selected plan — likely paid for a different plan.
+        // Reject immediately rather than auto-unlocking the wrong tier.
+        setStep('mismatch');
+        return;
+      }
+
+      await sendForReview(userData.user.id, url, result);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.subQrGenericError);
       setStep('upload');
@@ -515,12 +528,57 @@ export default function SubscriptionModal({ onClose }: Props) {
                   <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
                   <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
                   <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
+                  <CheckRow ok={ocrResult.tranId ? true : null} label={t.subCheckTranIdLabel} />
                   <CheckRow
                     ok={ocrResult.dateText ? ocrResult.dateRecent ?? null : null}
                     label={ocrResult.dateText ? `${t.subCheckDateLabel}: ${ocrResult.dateText}` : t.subCheckDateLabel}
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* STEP: duplicate (receipt's transaction ID already used elsewhere) */}
+          {step === 'duplicate' && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 py-6 text-center">
+              <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EF4444]/15">
+                <XCircle size={28} className="text-[#EF4444]" />
+              </div>
+              <p className="text-[12px] font-bold text-white">{t.subDuplicateTitle}</p>
+              <p className="mt-1.5 px-3 text-[10.5px] leading-relaxed text-white/50">{t.subDuplicateBody}</p>
+
+              {ocrResult && (
+                <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 text-left">
+                  <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
+                  <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
+                  <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
+                  <CheckRow ok={false} label={t.subCheckTranIdLabel} />
+                </div>
+              )}
+
+              <div className="mt-4 grid grid-cols-1 gap-2">
+                <a
+                  href={ADMIN_TELEGRAM_LINK}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-black transition hover:opacity-90"
+                  style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                >
+                  <Send size={13} />
+                  {t.subContactAdminNow}
+                </a>
+                <button
+                  onClick={() => {
+                    setError('');
+                    setOcrResult(null);
+                    setStep('upload');
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white transition hover:bg-white/5"
+                >
+                  <RefreshCw size={13} />
+                  {t.subRetryUpload}
+                </button>
+              </div>
             </div>
           )}
 
@@ -538,6 +596,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
                   <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
                   <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
+                  <CheckRow ok={ocrResult.tranId ? true : null} label={t.subCheckTranIdLabel} />
                 </div>
               )}
 
@@ -593,6 +652,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                   <CheckRow ok={ocrResult.nameMatched} label={t.subCheckNameLabel} />
                   <CheckRow ok={ocrResult.refMatched} label={t.subCheckRefLabel} />
                   <CheckRow ok={ocrResult.amountMatched} label={t.subCheckAmountLabel} />
+                  <CheckRow ok={ocrResult.tranId ? true : null} label={t.subCheckTranIdLabel} />
                 </div>
               )}
 
