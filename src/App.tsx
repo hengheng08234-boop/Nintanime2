@@ -309,6 +309,16 @@ function App() {
         ? 'spin-ready'
         : null;
 
+  // Same eligibility as promoVariant, but NOT gated by promoDismissed — this
+  // powers the small gift badge on the home screen header (next to
+  // Subscribe) so the free-spin offer stays reachable even after the
+  // popup itself has been closed for this visit.
+  const rewardsVariant: 'guest' | 'spin-ready' | null = !session
+    ? 'guest'
+    : isSubscribed(profile) && profile && !profile.lucky_draw_used
+      ? 'spin-ready'
+      : null;
+
   // home — default landing screen for everyone (signed-in or browsing)
   return (
     <>
@@ -317,8 +327,16 @@ function App() {
         onOpenProfile={() => requireAuth({ name: 'profile' })}
         onOpenSubscription={() => setShowSubModal(true)}
         onOpenWatchlist={() => requireAuth({ name: 'watchlist' })}
+        onOpenRewards={() => {
+          if (!session) {
+            setScreen({ name: 'auth', mode: 'signup' });
+          } else {
+            setShowLuckyDraw(true);
+          }
+        }}
         avatarUrl={profile?.avatar_url ?? null}
         subscribed={isSubscribed(profile)}
+        rewardsAvailable={rewardsVariant}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         searchOpen={searchOpen}
