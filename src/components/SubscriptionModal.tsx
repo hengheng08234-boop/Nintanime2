@@ -8,7 +8,11 @@ import {
   BadgeCheck,
   RefreshCw,
   Clock,
-  Wifi,
+  Download,
+  ScanLine,
+  QrCode,
+  ShieldCheck,
+  Radio,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { useLang } from '@/lib/useLang';
@@ -45,7 +49,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Step = 'summary' | 'waiting' | 'success' | 'timeout';
+type Step = 'summary' | 'paying' | 'success' | 'timeout';
 
 export default function SubscriptionModal({ onClose }: Props) {
   const { lang } = useLang();
@@ -71,19 +75,19 @@ export default function SubscriptionModal({ onClose }: Props) {
 
   useEffect(() => () => stopTimers(), []);
 
-  const autoSaveQr = (planKey: PlanKey) => {
+  const saveQr = () => {
     const a = document.createElement('a');
-    a.href = PLAN_QR[planKey];
-    a.download = `nint-anime-qr-${planKey}.png`;
+    a.href = PLAN_QR[selected];
+    a.download = `nint-anime-qr-${selected}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
   };
 
-  const startWaiting = (requestId: string) => {
+  const startListening = (requestId: string) => {
     setPendingRequestId(requestId);
     setSecondsLeft(COUNTDOWN_SECONDS);
-    setStep('waiting');
+    setStep('paying');
 
     let remaining = COUNTDOWN_SECONDS;
     stopTimers();
@@ -110,7 +114,7 @@ export default function SubscriptionModal({ onClose }: Props) {
     }, POLL_INTERVAL_MS);
   };
 
-  const createRequestAndLaunch = async () => {
+  const handlePay = async () => {
     setError('');
     setPaying(true);
     try {
@@ -130,10 +134,7 @@ export default function SubscriptionModal({ onClose }: Props) {
         .single();
 
       if (insertError || !data) { setError(insertError?.message || t.subQrGenericError); return; }
-
-      // Auto-save QR then immediately show waiting modal
-      autoSaveQr(selectedPlan.key);
-      startWaiting(data.id);
+      startListening(data.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.subQrGenericError);
     } finally {
@@ -162,9 +163,7 @@ export default function SubscriptionModal({ onClose }: Props) {
         .single();
 
       if (insertError || !data) { setError(insertError?.message || t.subQrGenericError); return; }
-
-      autoSaveQr(selectedPlan.key);
-      startWaiting(data.id);
+      startListening(data.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.subQrGenericError);
     } finally {
@@ -172,10 +171,12 @@ export default function SubscriptionModal({ onClose }: Props) {
     }
   };
 
-  const canClose = step !== 'waiting';
+  const canClose = step !== 'paying';
+  const showPlans = step === 'summary';
+  const showQr = step === 'paying' || step === 'timeout';
+  const urgent = secondsLeft <= 10;
   const progress = secondsLeft / COUNTDOWN_SECONDS;
   const circumference = 2 * Math.PI * 46;
-  const urgent = secondsLeft <= 10;
 
   return (
     <div
@@ -199,7 +200,6 @@ export default function SubscriptionModal({ onClose }: Props) {
         >
           <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#E8A94A]/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-10 top-8 h-32 w-32 rounded-full bg-[#0F8F72]/15 blur-3xl" />
-
           {canClose && (
             <button
               onClick={onClose}
@@ -208,7 +208,6 @@ export default function SubscriptionModal({ onClose }: Props) {
               <X size={17} />
             </button>
           )}
-
           <div className="relative flex flex-col items-center pt-1 text-center">
             <div className="mb-2.5 flex h-20 w-20 items-center justify-center">
               <img
@@ -230,100 +229,134 @@ export default function SubscriptionModal({ onClose }: Props) {
         </div>
 
         {/* ── Body ── */}
-        <div className="max-h-[70vh] overflow-y-auto p-4">
+        <div className="max-h-[72vh] overflow-y-auto p-4">
 
-          {/* ── STEP: summary ── */}
-          {step === 'summary' && (
-            <>
-              {/* Plan grid */}
-              <div className="mb-4 grid grid-cols-2 gap-2.5">
-                {PLANS.map((p) => {
-                  const isSelected = selected === p.key;
-                  return (
-                    <button
-                      key={p.key}
-                      onClick={() => setSelected(p.key)}
-                      className="relative rounded-2xl p-3 text-center transition-all duration-200"
-                      style={{
-                        border: isSelected ? '1.5px solid #E8A94A' : '1.5px solid rgba(255,255,255,0.08)',
-                        background: isSelected
-                          ? 'linear-gradient(160deg,rgba(232,169,74,0.14),rgba(15,143,114,0.08))'
-                          : 'rgba(255,255,255,0.02)',
-                        transform: isSelected ? 'translateY(-2px)' : 'none',
-                        boxShadow: isSelected ? '0 8px 20px rgba(232,169,74,0.15)' : 'none',
-                      }}
-                    >
-                      {p.tagKey && (
-                        <span
-                          className="absolute -top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-black"
-                          style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-                        >
-                          <Sparkles size={7} />
-                          {t[p.tagKey]}
-                        </span>
-                      )}
-                      <p className="mt-1 text-[11px] font-semibold text-white/80">{t[p.labelKey]}</p>
-                      <p className="mt-0.5 text-xl font-extrabold" style={{ color: isSelected ? '#E8A94A' : '#0F8F72' }}>
-                        ${p.price}
-                      </p>
-                      <p className="text-[10px] text-white/35">
-                        ${(p.price / p.months).toFixed(2)}{t.subPerMonth}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Pay button */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                <div className="mb-2.5 flex items-center justify-between">
-                  <p className="text-[11px] font-semibold text-white/60">{t.subTotalDue}</p>
-                  <p className="text-xl font-extrabold text-white">${selectedPlan.price}</p>
-                </div>
-                <p className="mb-3 text-[10.5px] leading-relaxed text-white/45">
-                  {km
-                    ? 'ចុចទូទាត់ → QR ត្រូវបាន save ស្វ័យប្រវត្តិ → scan & pay → ប្រព័ន្ធ unlock ដោយស្វ័យប្រវត្ត'
-                    : 'Tap Pay → QR auto-saved → scan & pay → system unlocks automatically'}
-                </p>
-                {error && <p className="mb-2 text-[10.5px] text-[#EF4444]">{error}</p>}
-                <button
-                  onClick={createRequestAndLaunch}
-                  disabled={paying}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-60"
-                  style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-                >
-                  {paying
-                    ? <Loader2 size={15} className="animate-spin" />
-                    : <Crown size={15} />}
-                  {km ? 'ទូទាត់ & Save QR' : 'Pay & Save QR'}
-                </button>
-              </div>
-            </>
+          {/* ── Plan selector (summary step only) ── */}
+          {showPlans && (
+            <div className="mb-4 grid grid-cols-2 gap-2.5">
+              {PLANS.map((p) => {
+                const isSelected = selected === p.key;
+                return (
+                  <button
+                    key={p.key}
+                    onClick={() => setSelected(p.key)}
+                    className="relative rounded-2xl p-3 text-center transition-all duration-200"
+                    style={{
+                      border: isSelected ? '1.5px solid #E8A94A' : '1.5px solid rgba(255,255,255,0.08)',
+                      background: isSelected
+                        ? 'linear-gradient(160deg,rgba(232,169,74,0.14),rgba(15,143,114,0.08))'
+                        : 'rgba(255,255,255,0.02)',
+                      transform: isSelected ? 'translateY(-2px)' : 'none',
+                      boxShadow: isSelected ? '0 8px 20px rgba(232,169,74,0.15)' : 'none',
+                    }}
+                  >
+                    {p.tagKey && (
+                      <span
+                        className="absolute -top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-black"
+                        style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                      >
+                        <Sparkles size={7} />
+                        {t[p.tagKey]}
+                      </span>
+                    )}
+                    <p className="mt-1 text-[11px] font-semibold text-white/80">{t[p.labelKey]}</p>
+                    <p className="mt-0.5 text-xl font-extrabold" style={{ color: isSelected ? '#E8A94A' : '#0F8F72' }}>
+                      ${p.price}
+                    </p>
+                    <p className="text-[10px] text-white/35">
+                      ${(p.price / p.months).toFixed(2)}{t.subPerMonth}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
           )}
 
-          {/* ── STEP: waiting ── */}
-          {step === 'waiting' && (
-            <div className="flex flex-col items-center">
-              {/* QR display card */}
-              <div
-                className="w-full rounded-2xl p-4 text-center"
-                style={{ border: '1px solid rgba(232,169,74,0.2)', background: 'rgba(232,169,74,0.04)' }}
-              >
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#E8A94A]/70">
-                  {km ? 'KHQR · ABA · ${selectedPlan.price}' : `KHQR · ABA · $${selectedPlan.price}`}
-                </p>
+          {/* ── QR card (paying + timeout steps) ── */}
+          {showQr && (
+            <div
+              className="mb-4 rounded-2xl p-4"
+              style={{ border: '1px solid rgba(232,169,74,0.2)', background: 'rgba(232,169,74,0.04)' }}
+            >
+              {/* QR label */}
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <QrCode size={14} className="text-[#E8A94A]" />
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#E8A94A]/80">
+                    KHQR · ABA
+                  </p>
+                </div>
+                <p className="text-xl font-extrabold text-white">${selectedPlan.price}</p>
+              </div>
+
+              {/* QR image — stays visible for scanning */}
+              <div className="relative mx-auto w-fit">
                 <img
                   src={PLAN_QR[selected]}
                   alt="Payment QR"
-                  className="mx-auto h-52 w-52 rounded-xl bg-white p-1.5 object-contain shadow-lg"
+                  className="h-56 w-56 rounded-2xl bg-white p-2 object-contain shadow-lg"
                 />
-                <p className="mt-2 text-[9.5px] text-white/40">
-                  {km ? 'QR ត្រូវបាន save ស្វ័យប្រវត្តិ' : 'QR auto-saved to your device'}
-                </p>
+                {step === 'paying' && (
+                  <div className="absolute -bottom-1.5 left-1/2 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-[#0F8F72] px-2.5 py-0.5 text-[9px] font-bold text-white shadow-lg">
+                    <Radio size={9} className="animate-pulse" />
+                    {km ? 'កំពុងស្ទាក់ចាំ…' : 'Listening…'}
+                  </div>
+                )}
               </div>
 
-              {/* Countdown */}
-              <div className="relative my-5 flex h-32 w-32 items-center justify-center">
+              {/* Scan hint */}
+              <p className="mt-3 text-center text-[10px] text-white/40">
+                <ScanLine size={10} className="mb-0.5 mr-0.5 inline" />
+                {t.subScanHint}
+              </p>
+
+              {/* Save QR button */}
+              <button
+                onClick={saveQr}
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] py-2.5 text-[11px] font-semibold text-white/85 transition hover:bg-white/[0.07]"
+              >
+                <Download size={13} />
+                {t.subSaveOrScan}
+              </button>
+            </div>
+          )}
+
+          {/* ── Summary step: total + pay button ── */}
+          {step === 'summary' && (
+            <>
+              <div
+                className="mb-4 flex items-center justify-between rounded-2xl px-4 py-3"
+                style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+              >
+                <div>
+                  <p className="text-[10px] font-semibold text-white/45">{t.subTotalDue}</p>
+                  <p className="text-[10px] text-white/45">{t[selectedPlan.labelKey]}</p>
+                </div>
+                <p className="text-2xl font-extrabold text-white">${selectedPlan.price}</p>
+              </div>
+
+              {error && <p className="mb-2 text-[10.5px] text-[#EF4444]">{error}</p>}
+
+              <button
+                onClick={handlePay}
+                disabled={paying}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-60"
+                style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+              >
+                {paying ? <Loader2 size={15} className="animate-spin" /> : <Crown size={15} />}
+                {km ? 'ទូទាត់ & បង្ហាញ QR' : 'Pay & Show QR'}
+              </button>
+            </>
+          )}
+
+          {/* ── Paying step: countdown card ── */}
+          {step === 'paying' && (
+            <div
+              className="rounded-2xl p-4"
+              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+            >
+              {/* countdown ring */}
+              <div className="relative mx-auto mb-3 flex h-24 w-24 items-center justify-center">
                 <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 108 108">
                   <circle cx="54" cy="54" r="46" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" />
                   <circle
@@ -339,57 +372,46 @@ export default function SubscriptionModal({ onClose }: Props) {
                 </svg>
                 <div className="flex flex-col items-center">
                   <span
-                    className="text-4xl font-black tabular-nums leading-none"
+                    className="text-3xl font-black tabular-nums leading-none"
                     style={{ color: urgent ? '#EF4444' : '#E8A94A' }}
                   >
                     {secondsLeft}
                   </span>
-                  <span className="mt-0.5 text-[10px] text-white/45">{km ? 'វិនាទី' : 'sec'}</span>
+                  <span className="mt-0.5 text-[9px] text-white/45">{km ? 'វិនាទី' : 'sec'}</span>
                 </div>
               </div>
 
-              {/* Status */}
-              <div
-                className="w-full rounded-2xl px-4 py-4 text-center"
-                style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
-              >
+              <div className="text-center">
                 <div className="flex items-center justify-center gap-1.5">
-                  <Wifi size={13} className="text-[#0F8F72]" />
-                  <p className="text-[11px] font-bold text-white">
-                    {km ? 'រង់ចាំការបញ្ជាក់ពី ABA…' : 'Waiting for ABA confirmation…'}
-                  </p>
+                  <Radio size={13} className="animate-pulse text-[#0F8F72]" />
+                  <p className="text-[12px] font-bold text-white">{t.subListeningTitle}</p>
                 </div>
-                <p className="mt-1.5 text-[10px] leading-relaxed text-white/45">
-                  {km
-                    ? 'បន្ទាប់ពី ABA ផ្ញើ notification → Telegram bot ទទួល → unlock ដោយស្វ័យប្រវត្ត'
-                    : 'After ABA sends notification → Telegram bot receives → auto unlock'}
+                <p className="mx-auto mt-1.5 max-w-[250px] text-[10px] leading-relaxed text-white/50">
+                  {t.subListeningDesc}
                 </p>
-                <div className="mt-2.5 flex items-center justify-center gap-1.5">
-                  <Loader2 size={11} className="animate-spin text-[#E8A94A]" />
-                  <p className="text-[10px] text-white/50">
-                    {km ? 'កំពុងស្ទាក់ចាំ…' : 'Listening for payment…'}
-                  </p>
-                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-center gap-1.5">
+                <Loader2 size={11} className="animate-spin text-[#E8A94A]" />
+                <p className="text-[10px] text-white/50">
+                  {km ? 'កំពុងស្ទាក់ចាំការបញ្ជាក់ពី ABA…' : 'Waiting for ABA confirmation…'}
+                </p>
               </div>
             </div>
           )}
 
-          {/* ── STEP: timeout ── */}
+          {/* ── Timeout step: retry card ── */}
           {step === 'timeout' && (
-            <div className="flex flex-col items-center py-2 text-center">
-              <div
-                className="mb-3 flex h-16 w-16 items-center justify-center rounded-full"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-              >
-                <Clock size={28} className="text-white/40" />
+            <div
+              className="rounded-2xl p-4 text-center"
+              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+            >
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
+                <Clock size={26} className="text-white/45" />
               </div>
-              <p className="text-sm font-bold text-white">
-                {km ? '៣០ វិនាទីបានផុត' : '30 seconds expired'}
-              </p>
-              <p className="mt-1.5 max-w-[260px] text-[10.5px] leading-relaxed text-white/50">
-                {km
-                  ? 'មិនទាន់ទទួលបានការបញ្ជាក់ទេ។ ប្រសិនបើអ្នកបានទូទាត់ហើយ សូម scan QR ថ្មី ហើយ ចុចទូទាត់ម្ដងទៀត'
-                  : 'No confirmation received yet. If you already paid, scan the new QR and try again.'}
+              <p className="text-[13px] font-bold text-white">{t.subTimeoutTitle}</p>
+              <p className="mx-auto mt-1.5 max-w-[260px] text-[10.5px] leading-relaxed text-white/50">
+                {t.subTimeoutDesc}
               </p>
               {error && <p className="mt-2 text-[10.5px] text-[#EF4444]">{error}</p>}
               <button
@@ -399,7 +421,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
               >
                 {paying ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                {km ? 'ទូទាត់ & Save QR ម្ដងទៀត' : 'Pay & Save QR Again'}
+                {t.subPayAgain}
               </button>
               <button
                 onClick={onClose}
@@ -410,12 +432,12 @@ export default function SubscriptionModal({ onClose }: Props) {
             </div>
           )}
 
-          {/* ── STEP: success ── */}
+          {/* ── Success step ── */}
           {step === 'success' && (
-            <div className="flex flex-col items-center py-4 text-center">
+            <div className="flex flex-col items-center py-6 text-center">
               <div
                 className="mb-3 flex h-20 w-20 items-center justify-center rounded-full"
-                style={{ background: 'radial-gradient(circle,rgba(34,197,94,0.2),rgba(34,197,94,0.05))' }}
+                style={{ background: 'radial-gradient(circle,rgba(34,197,94,0.22),rgba(34,197,94,0.05))' }}
               >
                 <CheckCircle2 size={40} className="text-[#22C55E]" />
               </div>
@@ -423,7 +445,7 @@ export default function SubscriptionModal({ onClose }: Props) {
                 <Crown size={15} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
                 {t.subYourePremium}
               </p>
-              <p className="mt-1.5 max-w-[250px] text-[10.5px] leading-relaxed text-white/50">
+              <p className="mx-auto mt-1.5 max-w-[250px] text-[10.5px] leading-relaxed text-white/50">
                 {t.subConfirmedDesc}
               </p>
               <button
@@ -435,11 +457,12 @@ export default function SubscriptionModal({ onClose }: Props) {
               </button>
             </div>
           )}
+        </div>
 
-          <div className="flex items-center justify-center gap-1.5 pb-1 pt-3">
-            <BadgeCheck size={10} className="text-white/25" />
-            <p className="text-[9px] text-white/25">{t.subSecuredCheckout}</p>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-1.5 px-4 pb-4 pt-1">
+          <ShieldCheck size={10} className="text-white/25" />
+          <p className="text-[9px] text-white/25">{t.subSecAuto}</p>
         </div>
       </div>
     </div>
