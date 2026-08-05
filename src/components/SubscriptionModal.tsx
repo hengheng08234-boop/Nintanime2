@@ -5,14 +5,15 @@ import {
   CheckCircle2,
   Loader2,
   Sparkles,
-  BadgeCheck,
   RefreshCw,
-  Clock,
   Download,
-  ScanLine,
+  Check,
+  DollarSign,
   QrCode,
+  ArrowLeft,
+  Share2,
   ShieldCheck,
-  Radio,
+  Clock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { useLang } from '@/lib/useLang';
@@ -42,24 +43,23 @@ const PLAN_QR: Record<PlanKey, string> = {
   '1y': '/assets/images/subscription-1y.png',
 };
 
-const COUNTDOWN_SECONDS = 30;
+const COUNTDOWN_SECONDS = 60;
 const POLL_INTERVAL_MS = 3000;
 
 interface Props {
   onClose: () => void;
 }
 
-type Step = 'summary' | 'paying' | 'success' | 'timeout';
+type Step = 'summary' | 'qr' | 'success' | 'timeout';
 
 export default function SubscriptionModal({ onClose }: Props) {
   const { lang } = useLang();
   const t = appText[lang];
   const km = lang === 'km';
 
-  const [selected, setSelected] = useState<PlanKey>('1y');
+  const [selected, setSelected] = useState<PlanKey>('6m');
   const [step, setStep] = useState<Step>('summary');
   const [error, setError] = useState('');
-  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
   const [paying, setPaying] = useState(false);
 
@@ -85,9 +85,8 @@ export default function SubscriptionModal({ onClose }: Props) {
   };
 
   const startListening = (requestId: string) => {
-    setPendingRequestId(requestId);
     setSecondsLeft(COUNTDOWN_SECONDS);
-    setStep('paying');
+    setStep('qr');
 
     let remaining = COUNTDOWN_SECONDS;
     stopTimers();
@@ -114,7 +113,7 @@ export default function SubscriptionModal({ onClose }: Props) {
     }, POLL_INTERVAL_MS);
   };
 
-  const handlePay = async () => {
+  const createRequest = async () => {
     setError('');
     setPaying(true);
     try {
@@ -171,299 +170,297 @@ export default function SubscriptionModal({ onClose }: Props) {
     }
   };
 
-  const canClose = step !== 'paying';
-  const showPlans = step === 'summary';
-  const showQr = step === 'paying' || step === 'timeout';
   const urgent = secondsLeft <= 10;
   const progress = secondsLeft / COUNTDOWN_SECONDS;
-  const circumference = 2 * Math.PI * 46;
+  const circumference = 2 * Math.PI * 12;
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(6,6,10,0.88)', backdropFilter: 'blur(10px)' }}
-      onClick={canClose ? onClose : undefined}
+      className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4"
+      style={{ backgroundColor: 'rgba(6,6,10,0.85)', backdropFilter: 'blur(8px)' }}
+      onClick={step !== 'qr' ? onClose : undefined}
     >
       <div
-        className="relative w-full max-w-sm overflow-hidden rounded-[28px] text-white shadow-2xl"
+        className="relative w-full max-w-sm overflow-hidden text-white sm:rounded-[24px]"
         style={{
-          background: '#101018',
-          border: '1px solid rgba(232,169,74,0.15)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 60px rgba(15,143,114,0.07)',
+          background: '#121218',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header ── */}
-        <div
-          className="relative overflow-hidden px-5 pb-5 pt-5"
-          style={{ background: 'radial-gradient(120% 140% at 50% -20%, #262035 0%, #171626 50%, #0d0d16 100%)' }}
-        >
-          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#E8A94A]/10 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 top-8 h-32 w-32 rounded-full bg-[#0F8F72]/15 blur-3xl" />
-          {canClose && (
-            <button
-              onClick={onClose}
-              className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
-            >
-              <X size={17} />
-            </button>
-          )}
-          <div className="relative flex flex-col items-center pt-1 text-center">
-            <div className="mb-2.5 flex h-20 w-20 items-center justify-center">
-              <img
-                src={LOGO_URL}
-                alt="NINT ANIME"
-                className="h-full w-full object-contain drop-shadow-[0_6px_18px_rgba(232,169,74,0.3)]"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-            </div>
-            <p className="flex items-center gap-1.5 text-lg font-extrabold tracking-wide">
-              <Crown size={16} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
-              {t.subGoPremium}
-            </p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <Sparkles size={11} className="text-[#E8A94A]" />
-              <p className="text-[10.5px] text-white/50">{t.subTagline}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Body ── */}
-        <div className="max-h-[72vh] overflow-y-auto p-4">
-
-          {/* ── Plan selector (summary step only) ── */}
-          {showPlans && (
-            <div className="mb-4 grid grid-cols-2 gap-2.5">
-              {PLANS.map((p) => {
-                const isSelected = selected === p.key;
-                return (
-                  <button
-                    key={p.key}
-                    onClick={() => setSelected(p.key)}
-                    className="relative rounded-2xl p-3 text-center transition-all duration-200"
-                    style={{
-                      border: isSelected ? '1.5px solid #E8A94A' : '1.5px solid rgba(255,255,255,0.08)',
-                      background: isSelected
-                        ? 'linear-gradient(160deg,rgba(232,169,74,0.14),rgba(15,143,114,0.08))'
-                        : 'rgba(255,255,255,0.02)',
-                      transform: isSelected ? 'translateY(-2px)' : 'none',
-                      boxShadow: isSelected ? '0 8px 20px rgba(232,169,74,0.15)' : 'none',
-                    }}
-                  >
-                    {p.tagKey && (
-                      <span
-                        className="absolute -top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-black"
-                        style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-                      >
-                        <Sparkles size={7} />
-                        {t[p.tagKey]}
-                      </span>
-                    )}
-                    <p className="mt-1 text-[11px] font-semibold text-white/80">{t[p.labelKey]}</p>
-                    <p className="mt-0.5 text-xl font-extrabold" style={{ color: isSelected ? '#E8A94A' : '#0F8F72' }}>
-                      ${p.price}
-                    </p>
-                    <p className="text-[10px] text-white/35">
-                      ${(p.price / p.months).toFixed(2)}{t.subPerMonth}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ── QR card (paying + timeout steps) ── */}
-          {showQr && (
+        {/* ─── SUMMARY / PLAN SELECTION ─── */}
+        {(step === 'summary' || step === 'timeout') && (
+          <>
+            {/* Header */}
             <div
-              className="mb-4 rounded-2xl p-4"
-              style={{ border: '1px solid rgba(232,169,74,0.2)', background: 'rgba(232,169,74,0.04)' }}
+              className="relative overflow-hidden px-5 pb-4 pt-5 text-center"
+              style={{ background: 'linear-gradient(180deg,#1d1d2e 0%,#121218 100%)' }}
             >
-              {/* QR label */}
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <QrCode size={14} className="text-[#E8A94A]" />
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#E8A94A]/80">
-                    KHQR · ABA
-                  </p>
-                </div>
-                <p className="text-xl font-extrabold text-white">${selectedPlan.price}</p>
-              </div>
-
-              {/* QR image — stays visible for scanning */}
-              <div className="relative mx-auto w-fit">
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/8 text-white/60 transition hover:bg-white/15"
+              >
+                <X size={16} />
+              </button>
+              <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center">
                 <img
-                  src={PLAN_QR[selected]}
-                  alt="Payment QR"
-                  className="h-56 w-56 rounded-2xl bg-white p-2 object-contain shadow-lg"
+                  src={LOGO_URL}
+                  alt="NINT ANIME"
+                  className="h-full w-full object-contain"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
-                {step === 'paying' && (
-                  <div className="absolute -bottom-1.5 left-1/2 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-[#0F8F72] px-2.5 py-0.5 text-[9px] font-bold text-white shadow-lg">
-                    <Radio size={9} className="animate-pulse" />
-                    {km ? 'កំពុងស្ទាក់ចាំ…' : 'Listening…'}
+              </div>
+              <h2 className="flex items-center justify-center gap-1.5 text-base font-bold text-white">
+                <Crown size={15} fill="#E8A94A" strokeWidth={0} className="text-[#E8A94A]" />
+                {t.subGoPremium}
+              </h2>
+              <p className="mt-0.5 flex items-center justify-center gap-1 text-[10.5px] text-white/45">
+                <Sparkles size={10} className="text-[#E8A94A]" />
+                {t.subTagline}
+              </p>
+            </div>
+
+            <div className="max-h-[75vh] overflow-y-auto">
+              <div className="px-4 pb-5 pt-2">
+
+                {/* Plan grid */}
+                <div className="mb-3 grid grid-cols-2 gap-2">
+                  {PLANS.map((p) => {
+                    const isSelected = selected === p.key;
+                    return (
+                      <button
+                        key={p.key}
+                        onClick={() => setSelected(p.key)}
+                        className="relative rounded-xl px-3 pb-3 pt-4 text-left transition-all duration-150"
+                        style={{
+                          border: isSelected ? '1.5px solid #E8A94A' : '1.5px solid rgba(255,255,255,0.08)',
+                          background: isSelected ? 'rgba(30,26,18,1)' : 'rgba(255,255,255,0.02)',
+                          boxShadow: isSelected ? '0 0 0 1px #E8A94A22' : 'none',
+                        }}
+                      >
+                        {p.tagKey && (
+                          <span
+                            className="absolute -top-2.5 left-3 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[9px] font-extrabold text-black"
+                            style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                          >
+                            <Sparkles size={7} />
+                            {t[p.tagKey]}
+                          </span>
+                        )}
+                        <p className="text-[10.5px] font-medium text-white/60">{t[p.labelKey]}</p>
+                        <p
+                          className="mt-0.5 text-[26px] font-black leading-none"
+                          style={{ color: isSelected ? '#E8A94A' : '#0F8F72' }}
+                        >
+                          ${p.price}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-white/30">
+                          ${(p.price / p.months).toFixed(2)}{t.subPerMonth}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Total row */}
+                <div
+                  className="mb-3 flex items-center gap-3 rounded-xl px-4 py-3"
+                  style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}
+                >
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#0F8F72]">
+                    <DollarSign size={16} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-white/70">{t.subTotalDue}</p>
+                    <p className="text-[10px] text-white/40">{t[selectedPlan.labelKey]}</p>
+                  </div>
+                  <p className="text-2xl font-black text-white">${selectedPlan.price}</p>
+                </div>
+
+                {/* Payment info section */}
+                <div
+                  className="mb-3 rounded-xl p-4"
+                  style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                >
+                  <p className="mb-1 flex items-center gap-1.5 text-[11px] font-bold text-white/80">
+                    <QrCode size={13} className="text-[#E8A94A]" />
+                    {t.subStep2Title}
+                  </p>
+                  <p className="text-[10px] leading-relaxed text-white/45">{t.subStep2Desc}</p>
+                </div>
+
+                {step === 'timeout' && (
+                  <div
+                    className="mb-3 flex items-start gap-2 rounded-xl px-3 py-3"
+                    style={{ border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)' }}
+                  >
+                    <Clock size={14} className="mt-0.5 flex-shrink-0 text-[#EF4444]" />
+                    <p className="text-[10.5px] text-[#EF4444]/80">{t.subTimeoutDesc}</p>
                   </div>
                 )}
+
+                {error && <p className="mb-2 text-[10.5px] text-[#EF4444]">{error}</p>}
+
+                <button
+                  onClick={createRequest}
+                  disabled={paying}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(90deg,#0F8F72,#0B6E58)' }}
+                >
+                  {paying ? <Loader2 size={15} className="animate-spin" /> : <DollarSign size={15} />}
+                  {km ? 'ទូទាត់' : 'Pay Now'}
+                </button>
               </div>
-
-              {/* Scan hint */}
-              <p className="mt-3 text-center text-[10px] text-white/40">
-                <ScanLine size={10} className="mb-0.5 mr-0.5 inline" />
-                {t.subScanHint}
-              </p>
-
-              {/* Save QR button */}
-              <button
-                onClick={saveQr}
-                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] py-2.5 text-[11px] font-semibold text-white/85 transition hover:bg-white/[0.07]"
-              >
-                <Download size={13} />
-                {t.subSaveOrScan}
-              </button>
             </div>
-          )}
 
-          {/* ── Summary step: total + pay button ── */}
-          {step === 'summary' && (
-            <>
-              <div
-                className="mb-4 flex items-center justify-between rounded-2xl px-4 py-3"
-                style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
-              >
-                <div>
-                  <p className="text-[10px] font-semibold text-white/45">{t.subTotalDue}</p>
-                  <p className="text-[10px] text-white/45">{t[selectedPlan.labelKey]}</p>
-                </div>
-                <p className="text-2xl font-extrabold text-white">${selectedPlan.price}</p>
+            {/* Footer */}
+            <div className="flex items-center justify-center gap-1.5 border-t border-white/5 py-3">
+              <ShieldCheck size={10} className="text-white/25" />
+              <p className="text-[9px] text-white/25">{t.subSecFooter ?? 'Secured checkout · Powered by ABA PayWay KHQR'}</p>
+            </div>
+          </>
+        )}
+
+        {/* ─── QR STEP ─── */}
+        {step === 'qr' && (
+          <>
+            <div className="px-4 pb-2 pt-4">
+              {/* QR section header */}
+              <div className="mb-3 text-center">
+                <p className="flex items-center justify-center gap-1.5 text-[12px] font-bold text-white">
+                  <QrCode size={14} className="text-[#E8A94A]" />
+                  {km ? 'ស្វែង និង គ្រូទុក QR' : 'Scan or Save QR'}
+                </p>
+                <p className="mx-auto mt-1 max-w-[280px] text-[10px] leading-relaxed text-white/45">
+                  {t.subStep2Desc}
+                </p>
               </div>
 
-              {error && <p className="mb-2 text-[10.5px] text-[#EF4444]">{error}</p>}
+              {/* Full-width QR card */}
+              <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <img
+                  src={PLAN_QR[selected]}
+                  alt="KHQR Payment"
+                  className="h-auto w-full object-contain"
+                  style={{ display: 'block' }}
+                />
+              </div>
 
-              <button
-                onClick={handlePay}
-                disabled={paying}
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-60"
-                style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-              >
-                {paying ? <Loader2 size={15} className="animate-spin" /> : <Crown size={15} />}
-                {km ? 'ទូទាត់ & បង្ហាញ QR' : 'Pay & Show QR'}
-              </button>
-            </>
-          )}
+              {/* Action buttons row */}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={saveQr}
+                  className="flex items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-semibold text-white/85 transition hover:bg-white/10"
+                  style={{ border: '1.5px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)' }}
+                >
+                  <Download size={14} />
+                  {km ? 'រក្សាទុក QR' : 'Save QR'}
+                </button>
+                <button
+                  className="flex items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-bold text-black transition hover:brightness-105"
+                  style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
+                  disabled
+                >
+                  <Check size={16} strokeWidth={3} />
+                </button>
+              </div>
 
-          {/* ── Paying step: countdown card ── */}
-          {step === 'paying' && (
+              {/* Share icon row */}
+              <div className="mt-2 flex justify-center">
+                <button
+                  onClick={saveQr}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-white/35 transition hover:text-white/60"
+                >
+                  <Share2 size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Waiting / countdown section at bottom */}
             <div
-              className="rounded-2xl p-4"
+              className="mx-4 mb-2 rounded-2xl px-4 py-3"
               style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
             >
-              {/* countdown ring */}
-              <div className="relative mx-auto mb-3 flex h-24 w-24 items-center justify-center">
-                <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 108 108">
-                  <circle cx="54" cy="54" r="46" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" />
-                  <circle
-                    cx="54" cy="54" r="46"
-                    fill="none"
-                    stroke={urgent ? '#EF4444' : '#E8A94A'}
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeDasharray={`${circumference}`}
-                    strokeDashoffset={`${circumference * (1 - progress)}`}
-                    style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
-                  />
-                </svg>
-                <div className="flex flex-col items-center">
+              <div className="flex items-center gap-3">
+                {/* Mini circular countdown */}
+                <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center">
+                  <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 32 32">
+                    <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                    <circle
+                      cx="16" cy="16" r="12"
+                      fill="none"
+                      stroke={urgent ? '#EF4444' : '#E8A94A'}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={`${circumference}`}
+                      strokeDashoffset={`${circumference * (1 - progress)}`}
+                      style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
+                    />
+                  </svg>
                   <span
-                    className="text-3xl font-black tabular-nums leading-none"
+                    className="text-[11px] font-black tabular-nums"
                     style={{ color: urgent ? '#EF4444' : '#E8A94A' }}
                   >
                     {secondsLeft}
                   </span>
-                  <span className="mt-0.5 text-[9px] text-white/45">{km ? 'វិនាទី' : 'sec'}</span>
                 </div>
-              </div>
-
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1.5">
-                  <Radio size={13} className="animate-pulse text-[#0F8F72]" />
-                  <p className="text-[12px] font-bold text-white">{t.subListeningTitle}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
+                    <Loader2 size={11} className="animate-spin flex-shrink-0 text-[#0F8F72]" />
+                    {t.subWaitingPayment ?? (km ? 'រង់ចាំការទូទាត់…' : 'Waiting for payment…')}
+                  </p>
+                  <p className="mt-0.5 text-[9.5px] text-white/35">
+                    {t.subAutoUnlockNote ?? (km ? 'VIP ដោះសោស្វ័យប្រវត្តិពេល ABA បញ្ជាក់' : 'Auto-unlocks when ABA confirms')}
+                  </p>
                 </div>
-                <p className="mx-auto mt-1.5 max-w-[250px] text-[10px] leading-relaxed text-white/50">
-                  {t.subListeningDesc}
-                </p>
-              </div>
-
-              <div className="mt-3 flex items-center justify-center gap-1.5">
-                <Loader2 size={11} className="animate-spin text-[#E8A94A]" />
-                <p className="text-[10px] text-white/50">
-                  {km ? 'កំពុងស្ទាក់ចាំការបញ្ជាក់ពី ABA…' : 'Waiting for ABA confirmation…'}
-                </p>
               </div>
             </div>
-          )}
 
-          {/* ── Timeout step: retry card ── */}
-          {step === 'timeout' && (
-            <div
-              className="rounded-2xl p-4 text-center"
-              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+            {/* Back button */}
+            <button
+              onClick={() => { stopTimers(); setStep('summary'); }}
+              className="mb-1 flex items-center gap-1.5 px-4 py-2 text-[11px] text-white/40 transition hover:text-white/70"
             >
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
-                <Clock size={26} className="text-white/45" />
-              </div>
-              <p className="text-[13px] font-bold text-white">{t.subTimeoutTitle}</p>
-              <p className="mx-auto mt-1.5 max-w-[260px] text-[10.5px] leading-relaxed text-white/50">
-                {t.subTimeoutDesc}
-              </p>
-              {error && <p className="mt-2 text-[10.5px] text-[#EF4444]">{error}</p>}
-              <button
-                onClick={handleRetry}
-                disabled={paying}
-                className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl py-3.5 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-60"
-                style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-              >
-                {paying ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                {t.subPayAgain}
-              </button>
-              <button
-                onClick={onClose}
-                className="mt-2 w-full rounded-xl border border-white/10 py-2.5 text-[11px] font-semibold text-white/55 transition hover:bg-white/5"
-              >
-                {km ? 'បិទ' : 'Close'}
-              </button>
-            </div>
-          )}
+              <ArrowLeft size={13} />
+              {km ? 'ចំហរភ្នំ' : 'Back'}
+            </button>
 
-          {/* ── Success step ── */}
-          {step === 'success' && (
-            <div className="flex flex-col items-center py-6 text-center">
-              <div
-                className="mb-3 flex h-20 w-20 items-center justify-center rounded-full"
-                style={{ background: 'radial-gradient(circle,rgba(34,197,94,0.22),rgba(34,197,94,0.05))' }}
-              >
-                <CheckCircle2 size={40} className="text-[#22C55E]" />
-              </div>
-              <p className="flex items-center gap-1.5 text-sm font-bold text-white">
-                <Crown size={15} className="text-[#E8A94A]" fill="#E8A94A" strokeWidth={0} />
-                {t.subYourePremium}
-              </p>
-              <p className="mx-auto mt-1.5 max-w-[250px] text-[10.5px] leading-relaxed text-white/50">
-                {t.subConfirmedDesc}
-              </p>
-              <button
-                onClick={onClose}
-                className="mt-4 rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:opacity-90"
-                style={{ background: 'linear-gradient(90deg,#E8A94A,#C97A2E)' }}
-              >
-                {t.subStartWatching}
-              </button>
+            {/* Footer */}
+            <div className="flex items-center justify-center gap-1.5 border-t border-white/5 py-3">
+              <ShieldCheck size={10} className="text-white/25" />
+              <p className="text-[9px] text-white/25">{t.subSecFooter ?? 'Secured checkout · Powered by ABA PayWay KHQR'}</p>
             </div>
-          )}
-        </div>
+          </>
+        )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-center gap-1.5 px-4 pb-4 pt-1">
-          <ShieldCheck size={10} className="text-white/25" />
-          <p className="text-[9px] text-white/25">{t.subSecAuto}</p>
-        </div>
+        {/* ─── SUCCESS ─── */}
+        {step === 'success' && (
+          <div className="flex flex-col items-center px-5 py-10 text-center">
+            <div
+              className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
+              style={{ background: 'radial-gradient(circle,rgba(34,197,94,0.22),rgba(34,197,94,0.05))' }}
+            >
+              <CheckCircle2 size={40} className="text-[#22C55E]" />
+            </div>
+            <p className="flex items-center gap-1.5 text-base font-bold text-white">
+              <Crown size={15} fill="#E8A94A" strokeWidth={0} className="text-[#E8A94A]" />
+              {t.subYourePremium}
+            </p>
+            <p className="mx-auto mt-2 max-w-[250px] text-[10.5px] leading-relaxed text-white/50">
+              {t.subConfirmedDesc}
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-5 rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:brightness-105"
+              style={{ background: 'linear-gradient(90deg,#0F8F72,#0B6E58)' }}
+            >
+              {t.subStartWatching}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
