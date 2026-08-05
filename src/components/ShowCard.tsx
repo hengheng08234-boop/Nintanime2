@@ -19,7 +19,7 @@ export default function ShowCard({ show, onClick }: ShowCardProps) {
       onClick={() => onClick(show)}
       className="group relative w-[160px] shrink-0 text-left sm:w-[180px]"
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#1E1E2A] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_18px_40px_rgba(0,0,0,0.65)] group-hover:ring-[#0F8F72]/40">
+      <div className="relative z-10 aspect-[2/3] overflow-hidden rounded-xl bg-[#1E1E2A] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition duration-300 ease-out group-hover:z-20 group-hover:-translate-y-2 group-hover:scale-[1.04] group-hover:shadow-[0_20px_44px_rgba(0,0,0,0.7)] group-hover:ring-[#0F8F72]/40">
         {!loaded && <div className="absolute inset-0 animate-pulse bg-[#1E1E2A]" />}
         <img
           src={show.poster_url ?? ''}

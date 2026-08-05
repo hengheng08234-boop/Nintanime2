@@ -34,6 +34,7 @@ export const appText = {
     searchPlaceholder: 'Search titles…',
     premium: 'Premium',
     subscribe: 'Subscribe',
+    rewardsBadge: 'Rewards',
     loadingLibrary: 'Loading your library…',
     somethingWrong: 'Something went wrong',
     featured: 'Featured',
@@ -216,6 +217,11 @@ export const appText = {
     subCheckNameLabel: 'Recipient name',
     subCheckRefLabel: 'App reference tag',
     subCheckDateLabel: 'Payment date/time',
+    subCheckAmountLabel: 'Payment amount',
+    subCheckTranIdLabel: 'Transaction code',
+    subDuplicateTitle: 'This receipt was already used',
+    subDuplicateBody:
+      'This transaction code has already unlocked VIP on another account. If you think this is a mistake, message admin on Telegram.',
     subPendingTitle: 'Sent for review',
     subPendingBody:
       "We couldn't auto-match your screenshot, so it's been sent to our team. This is usually quick, but can take up to 1 hour.",
@@ -288,6 +294,7 @@ export const appText = {
     searchPlaceholder: 'ស្វែងរកចំណងជើង…',
     premium: 'ភីមៀម',
     subscribe: 'ជាវសមាជិក',
+    rewardsBadge: 'រង្វាន់',
     loadingLibrary: 'កំពុងផ្ទុកឃ្លាំងរបស់អ្នក…',
     somethingWrong: 'មានបញ្ហាកើតឡើង',
     featured: 'លេចធ្លោ',
@@ -470,6 +477,11 @@ export const appText = {
     subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
     subCheckRefLabel: 'លេខកូដយោង (App)',
     subCheckDateLabel: 'ថ្ងៃ/ម៉ោង ទូទាត់',
+    subCheckAmountLabel: 'ចំនួនប្រាក់ទូទាត់',
+    subCheckTranIdLabel: 'លេខកូដប្រតិបត្តិការ',
+    subDuplicateTitle: 'វិក្កយបត្រនេះត្រូវបានប្រើប្រាស់រួចហើយ',
+    subDuplicateBody:
+      'លេខកូដប្រតិបត្តិការនេះធ្លាប់ត្រូវបានប្រើដើម្បីដោះសោ VIP នៅគណនីមួយផ្សេងទៀតរួចហើយ។ ប្រសិនបើអ្នកគិតថានេះជាកំហុស សូមផ្ញើសារទៅអភិបាលតាម Telegram។',
     subPendingTitle: 'បានផ្ញើសម្រាប់ពិនិត្យ',
     subPendingBody:
       'ប្រព័ន្ធមិនអាចផ្គូផ្គងរូបភាពដោយស្វ័យប្រវត្តិបានទេ ដូច្នេះបានផ្ញើទៅក្រុមការងារជំនួយ។ ជាធម្មតាលឿន ប៉ុន្តែអាចចំណាយពេលដល់ ១ម៉ោង។',

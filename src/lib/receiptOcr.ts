@@ -71,6 +71,19 @@ const DATE_PATTERN =
 /** Loosely matches HH:MM or HH:MM:SS, optionally with AM/PM. */
 const TIME_PATTERN = /\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\s*(AM|PM|am|pm)?\b/;
 
+/**
+ * Matches a bank/PayWay transaction (or "hash") ID printed on the receipt,
+ * e.g. "Tran ID: FT26123ABCDEF", "Transaction ID 000123456789", or a bare
+ * 8+ character alphanumeric code near the word TRAN/TRANSACTION/HASH/REF.
+ * This is the one field on a real receipt that's unique per payment, so
+ * unlike the name/reference/amount (which are the same on every receipt
+ * and can be typed into a photo editor by anyone) it's what lets the
+ * server tell a genuine one-time payment apart from the same screenshot
+ * being replayed to claim VIP more than once.
+ */
+const TRAN_ID_PATTERN =
+  /\b(?:TRAN(?:SACTION)?\s*(?:ID|NO|NUMBER)?|HASH|REF(?:ERENCE)?\s*(?:ID|NO)?)[:.\s]*([A-Z0-9]{6,})\b/i;
+
 function extractDate(rawText: string): string | null {
   const match = rawText.match(DATE_PATTERN);
   return match ? match[0] : null;
@@ -79,6 +92,31 @@ function extractDate(rawText: string): string | null {
 function extractTime(rawText: string): string | null {
   const match = rawText.match(TIME_PATTERN);
   return match ? match[0] : null;
+}
+
+/**
+ * Best-effort extraction of a unique transaction ID from the receipt.
+ * Returns null when nothing that looks like one was found — this is
+ * common (OCR miss, or the bank's app doesn't print one clearly), and a
+ * miss is treated as "unknown", not "fraud": only an *exact match with an
+ * already-confirmed request* (checked server-side, see
+ * confirm_subscription_via_ocr) is treated as reuse.
+ */
+function extractTransactionId(rawText: string): string | null {
+  const match = rawText.match(TRAN_ID_PATTERN);
+  return match ? match[1].toUpperCase() : null;
+}
+
+/**
+ * Checks whether the expected plan price (e.g. 2 -> "2.00") appears
+ * anywhere in the raw OCR text, ignoring commas/currency symbols/spaces.
+ * Returns null when no expected amount was supplied (nothing to check).
+ */
+function amountAppears(rawText: string, expectedAmount: number | undefined): boolean | null {
+  if (expectedAmount === undefined || expectedAmount === null) return null;
+  const target = expectedAmount.toFixed(2);
+  const cleanedDigits = rawText.replace(/[,$\s]/g, '');
+  return cleanedDigits.includes(target);
 }
 
 /**
@@ -99,27 +137,40 @@ function isRecentDate(dateStr: string | null, windowHours = 48): boolean | null 
 
 export interface ReceiptOcrResult {
   rawText: string;
-  /** True only when both the name and the reference tag were found. */
+  /** True only when the name, reference tag, AND amount all check out. */
   matched: boolean;
   nameMatched: boolean;
   refMatched: boolean;
+  /** true / false / null (no expected amount was passed in to check against) */
+  amountMatched: boolean | null;
   dateText: string | null;
   timeText: string | null;
   /** true / false / null (couldn't parse a date on the receipt) */
   dateRecent: boolean | null;
+  /**
+   * Unique transaction/hash code read off the receipt, if any was found.
+   * Null just means OCR didn't spot one — it does not block instant
+   * unlock on its own. The server checks it for reuse against past
+   * confirmed requests when it's present.
+   */
+  tranId: string | null;
 }
 
 /**
  * Runs OCR on an uploaded receipt image and checks whether it contains the
- * required recipient name and app reference tag, and pulls out a date/time
- * if one is visible. This is a lightweight, best-effort check meant to
- * unlock VIP instantly for the common case — it is not a substitute for
- * real payment-gateway verification, and the uploaded proof stays attached
- * to the request so an admin can audit or revoke it later if needed. The
- * name + reference check is always re-verified server-side before anything
- * is actually confirmed (see confirm_subscription_via_ocr).
+ * required recipient name, app reference tag, and (if an expected amount is
+ * passed) the plan's price — and pulls out a date/time if one is visible.
+ * This is a lightweight, best-effort check meant to unlock VIP instantly
+ * for the common case — it is not a substitute for real payment-gateway
+ * verification, and the uploaded proof stays attached to the request so an
+ * admin can audit or revoke it later if needed. The name + reference +
+ * amount check is always re-verified server-side before anything is
+ * actually confirmed (see confirm_subscription_via_ocr).
  */
-export async function verifyReceiptScreenshot(file: File): Promise<ReceiptOcrResult> {
+export async function verifyReceiptScreenshot(
+  file: File,
+  expectedAmount?: number,
+): Promise<ReceiptOcrResult> {
   const worker = await createWorker('eng');
   try {
     const {
@@ -128,16 +179,20 @@ export async function verifyReceiptScreenshot(file: File): Promise<ReceiptOcrRes
     const normalized = normalize(text);
     const nameMatched = fuzzyContains(normalized, normalize(RECEIPT_MATCH_PHRASE));
     const refMatched = fuzzyContains(normalized, normalize(RECEIPT_REF_PHRASE));
+    const amountMatched = amountAppears(text, expectedAmount);
     const dateText = extractDate(text);
     const timeText = extractTime(text);
+    const tranId = extractTransactionId(text);
     return {
       rawText: text,
-      matched: nameMatched && refMatched,
+      matched: nameMatched && refMatched && amountMatched !== false,
       nameMatched,
       refMatched,
+      amountMatched,
       dateText,
       timeText,
       dateRecent: isRecentDate(dateText),
+      tranId,
     };
   } finally {
     await worker.terminate();
