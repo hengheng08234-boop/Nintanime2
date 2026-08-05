@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   Send,
   Clock,
-  Copy,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { useLang } from '@/lib/useLang';
@@ -105,9 +104,6 @@ export default function SubscriptionModal({ onClose }: Props) {
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [reviewDeadline, setReviewDeadline] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [matchCode, setMatchCode] = useState<string | null>(null);
-  const [matchCodeCopied, setMatchCodeCopied] = useState(false);
-  const [creatingCode, setCreatingCode] = useState(false);
   const [pendingCreatedAt, setPendingCreatedAt] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -127,7 +123,6 @@ export default function SubscriptionModal({ onClose }: Props) {
     setStep('summary');
     setOcrResult(null);
     setError('');
-    setMatchCode(null);
     setPendingRequestId(null);
     setPendingCreatedAt(null);
   }, [selected]);
@@ -142,19 +137,14 @@ export default function SubscriptionModal({ onClose }: Props) {
       : `${m}:${String(s).padStart(2, '0')}`;
   };
 
-  // Creates the pending request up front (before payment) so it has a
-  // unique match_code the user can put in the ABA transfer note. If the
-  // Telegram auto-confirm bot spots that code in ABA's group
-  // notification, this same row flips to 'confirmed' with no OCR/upload
-  // step needed at all.
+  // Creates the pending request up front (before payment).
+  // Bot will match by amount automatically when ABA notifies.
   const handleGenerateQr = async () => {
     setError('');
-    setCreatingCode(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
         setError(t.subNotSignedIn);
-        setCreatingCode(false);
         return;
       }
       const { data, error: insertError } = await supabase
@@ -164,25 +154,21 @@ export default function SubscriptionModal({ onClose }: Props) {
           plan: selectedPlan.key,
           amount: selectedPlan.price,
           discount: 0,
-          description: 'Awaiting payment (Telegram auto-confirm)',
+          description: 'Awaiting payment (auto-unlock on amount match)',
         })
-        .select('id, created_at, match_code')
+        .select('id, created_at')
         .single();
 
       if (insertError || !data) {
         setError(insertError?.message || t.subQrGenericError);
-        setCreatingCode(false);
         return;
       }
 
       setPendingRequestId(data.id);
       setPendingCreatedAt(data.created_at);
-      setMatchCode(data.match_code);
       setStep('qr');
     } catch (err) {
       setError(err instanceof Error ? err.message : t.subQrGenericError);
-    } finally {
-      setCreatingCode(false);
     }
   };
 
@@ -191,16 +177,7 @@ export default function SubscriptionModal({ onClose }: Props) {
     startPendingWatch(pendingRequestId, pendingCreatedAt ?? new Date().toISOString());
   };
 
-  const handleCopyMatchCode = async () => {
-    if (!matchCode) return;
-    try {
-      await navigator.clipboard.writeText(matchCode);
-      setMatchCodeCopied(true);
-      setTimeout(() => setMatchCodeCopied(false), 2000);
-    } catch {
-      // Clipboard API unavailable — user can still select the text manually.
-    }
-  };
+
 
   const handleSaveQr = () => {
     const a = document.createElement('a');
@@ -497,11 +474,10 @@ export default function SubscriptionModal({ onClose }: Props) {
               <p className="mb-3 px-2 text-[10.5px] leading-relaxed text-white/50">{t.subManualIntro}</p>
               <button
                 onClick={handleGenerateQr}
-                disabled={creatingCode}
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold text-white transition hover:opacity-90"
                 style={{ background: 'linear-gradient(90deg,#0F8F72,#0B6E58)' }}
               >
-                {creatingCode ? <Loader2 size={14} className="animate-spin" /> : <DollarSign size={14} />}
+                <DollarSign size={14} />
                 {t.subPayNow}
               </button>
             </div>
@@ -517,32 +493,6 @@ export default function SubscriptionModal({ onClose }: Props) {
               <p className="mb-2 px-2 text-center text-[10px] leading-relaxed text-white/50">{t.subStep2Desc}</p>
 
               <QrPaymentCard qrSrc={PLAN_QR[selected]} />
-
-              {matchCode && (
-                <div
-                  className="mt-3 rounded-2xl p-3 text-center"
-                  style={{
-                    border: '1px solid rgba(232,169,74,0.35)',
-                    background: 'rgba(232,169,74,0.06)',
-                  }}
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#E8A94A]">
-                    {t.subMatchCodeTitle}
-                  </p>
-                  <div className="mt-1.5 flex items-center justify-center gap-2">
-                    <span className="text-xl font-extrabold tracking-[0.2em] text-white">{matchCode}</span>
-                    <button
-                      onClick={handleCopyMatchCode}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
-                      aria-label="Copy code"
-                    >
-                      <Copy size={13} />
-                    </button>
-                  </div>
-                  {matchCodeCopied && <p className="mt-0.5 text-[10px] text-[#22C55E]">{t.subMatchCodeCopied}</p>}
-                  <p className="mt-1.5 px-1 text-[10px] leading-relaxed text-white/50">{t.subMatchCodeHint}</p>
-                </div>
-              )}
 
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
