@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   Clock,
   ArrowLeft,
-  Share2,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { useLang } from '@/lib/useLang';
@@ -351,196 +350,198 @@ export default function SubscriptionModal({ onClose }: Props) {
           </>
         )}
 
-        {/* ─── QR STEP — KHQR Card Design ─── */}
+        {/* ─── QR STEP ─── */}
         {step === 'qr' && (
-          <div className="flex flex-col">
-            {/* Top bar with countdown + back */}
-            <div className="flex items-center justify-between px-4 pt-4 pb-2">
-              <button
-                onClick={() => { stopTimers(); setStep('summary'); }}
-                className="flex items-center gap-1.5 text-[11px] text-white/40 transition hover:text-white/70"
-              >
-                <ArrowLeft size={14} />
-                {km ? 'ថយក្រោយ' : 'Back'}
-              </button>
+          <div className="flex flex-col overflow-hidden" style={{ borderRadius: 'inherit' }}>
 
-              {/* Circular countdown */}
-              <div className="relative flex h-11 w-11 items-center justify-center">
-                <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 32 32">
-                  <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2.5" />
-                  <circle
-                    cx="16" cy="16" r="12"
-                    fill="none"
-                    stroke={urgent ? '#EF4444' : '#E8A94A'}
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeDasharray={`${circumference}`}
-                    strokeDashoffset={`${circumference * (1 - progress)}`}
-                    style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
-                  />
-                </svg>
-                <span
-                  className="relative text-[12px] font-black tabular-nums"
-                  style={{ color: urgent ? '#EF4444' : '#E8A94A' }}
-                >
-                  {secondsLeft}
-                </span>
-              </div>
-
-              <button
-                onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-white/40 transition hover:bg-white/10 hover:text-white"
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            {/* KHQR Card */}
-            <div className="px-4 pb-3">
+            {/* Anime background area with card floating over it */}
+            <div className="relative">
+              {/* Anime poster background */}
               <div
-                className="overflow-hidden rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
-                style={{ background: '#fff' }}
+                className="relative overflow-hidden"
+                style={{ height: 200 }}
               >
-                {/* Red KHQR header */}
+                <img
+                  src="/assets/images/image copy.png"
+                  alt=""
+                  className="h-full w-full object-cover object-top"
+                />
+                {/* Dark gradient overlay bottom */}
                 <div
-                  className="flex items-center justify-center py-3"
-                  style={{ background: '#D0191C', borderRadius: '16px 16px 0 0' }}
-                >
-                  <span className="text-[20px] font-black tracking-[0.25em] text-white">KHQR</span>
-                </div>
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(17,17,24,0) 40%, rgba(17,17,24,0.6) 80%, rgba(17,17,24,1) 100%)',
+                  }}
+                />
+                {/* Top bar: back + countdown + close */}
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-3">
+                  <button
+                    onClick={() => { stopTimers(); setStep('summary'); }}
+                    className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm transition hover:text-white"
+                    style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.12)' }}
+                  >
+                    <ArrowLeft size={12} />
+                    {km ? 'ថយក្រោយ' : 'Back'}
+                  </button>
 
-                {/* Card body */}
-                <div className="px-5 pt-4 pb-4">
-                  {/* Recipient */}
-                  <p className="mt-0.5 text-[14px] font-black text-gray-900 tracking-wide">
-                    PANG SOK HENG S2_Nint.Ani
-                  </p>
-
-                  {/* Amount */}
-                  <div className="mt-3">
-                    <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-                      {km ? 'ចំនួនប្រាក់' : 'Amount'}
-                    </p>
-                    <p className="mt-0.5 text-[30px] font-black text-gray-900 leading-none">
-                      ${selectedPlan.price.toFixed(2)}
-                    </p>
+                  {/* Circular countdown */}
+                  <div className="relative flex h-10 w-10 items-center justify-center">
+                    <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 32 32">
+                      <circle cx="16" cy="16" r="12" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />
+                      <circle
+                        cx="16" cy="16" r="12"
+                        fill="none"
+                        stroke={urgent ? '#EF4444' : '#E8A94A'}
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeDasharray={`${circumference}`}
+                        strokeDashoffset={`${circumference * (1 - progress)}`}
+                        style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
+                      />
+                    </svg>
+                    <span
+                      className="relative text-[11px] font-black tabular-nums"
+                      style={{ color: urgent ? '#EF4444' : '#E8A94A' }}
+                    >
+                      {secondsLeft}
+                    </span>
                   </div>
 
-                  {/* Dotted divider */}
-                  <div className="my-4" style={{ borderTop: '1.5px dashed #d1d5db' }} />
+                  <button
+                    onClick={onClose}
+                    className="flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition hover:brightness-125"
+                    style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
 
-                  {/* QR code */}
-                  <div className="relative flex justify-center">
+              {/* KHQR card — floats over the bottom of the poster */}
+              <div className="relative z-10 -mt-10 flex justify-center px-10">
+                <div
+                  className="w-full overflow-hidden"
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: 18,
+                    boxShadow: '0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  {/* Red header */}
+                  <div
+                    className="flex items-center justify-center py-2.5"
+                    style={{ background: '#D0191C' }}
+                  >
+                    {/* KHQR logo — text + QR icon matching the official style */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[15px] font-black tracking-[0.18em] text-white" style={{ fontFamily: 'system-ui, sans-serif' }}>KH</span>
+                      <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+                        <rect x="1" y="1" width="11" height="11" rx="1.5" fill="white"/>
+                        <rect x="20" y="1" width="11" height="11" rx="1.5" fill="white"/>
+                        <rect x="1" y="20" width="11" height="11" rx="1.5" fill="white"/>
+                        <rect x="3.5" y="3.5" width="6" height="6" rx="0.5" fill="#D0191C"/>
+                        <rect x="22.5" y="3.5" width="6" height="6" rx="0.5" fill="#D0191C"/>
+                        <rect x="3.5" y="22.5" width="6" height="6" rx="0.5" fill="#D0191C"/>
+                        <rect x="20" y="20" width="3" height="3" rx="0.5" fill="white"/>
+                        <rect x="25" y="20" width="3" height="3" rx="0.5" fill="white"/>
+                        <rect x="20" y="25" width="3" height="3" rx="0.5" fill="white"/>
+                        <rect x="26" y="26" width="5" height="5" rx="0.5" fill="white"/>
+                      </svg>
+                      <span className="text-[15px] font-black tracking-[0.18em] text-white" style={{ fontFamily: 'system-ui, sans-serif' }}>R</span>
+                    </div>
+                  </div>
+
+                  {/* Card info */}
+                  <div className="px-4 pt-3 pb-2">
+                    <p className="text-[12px] font-bold text-gray-800 leading-tight">
+                      PANG SOK HENG{' '}
+                      <span className="font-normal text-gray-500">S2_Nint.Ani</span>
+                    </p>
+                    <p className="mt-1 text-[22px] font-black text-gray-900 leading-none tracking-tight">
+                      $ {selectedPlan.price.toFixed(2)}
+                    </p>
+                    <div className="mt-2.5 mb-0" style={{ borderTop: '1.5px dashed #e5e7eb' }} />
+                  </div>
+
+                  {/* QR image — full width, no extra padding needed since image has its own whitespace */}
+                  <div className="relative flex items-center justify-center px-4 pb-4">
                     {!qrLoaded && !qrFailed && (
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/80">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#D0191C]" />
                       </div>
                     )}
-                    {qrFailed ? (
-                      <div
-                        className="flex h-[180px] w-[180px] items-center justify-center rounded-xl"
-                        style={{ background: '#f3f4f6' }}
-                      >
-                        <div className="text-center">
-                          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mx-auto mb-2">
-                            <rect x="2" y="2" width="18" height="18" rx="2" stroke="#374151" strokeWidth="2.5"/>
-                            <rect x="5" y="5" width="12" height="12" rx="1" fill="#374151"/>
-                            <rect x="28" y="2" width="18" height="18" rx="2" stroke="#374151" strokeWidth="2.5"/>
-                            <rect x="31" y="5" width="12" height="12" rx="1" fill="#374151"/>
-                            <rect x="2" y="28" width="18" height="18" rx="2" stroke="#374151" strokeWidth="2.5"/>
-                            <rect x="5" y="31" width="12" height="12" rx="1" fill="#374151"/>
-                            <rect x="28" y="28" width="5" height="5" rx="0.5" fill="#374151"/>
-                            <rect x="35" y="28" width="5" height="5" rx="0.5" fill="#374151"/>
-                            <rect x="28" y="35" width="5" height="5" rx="0.5" fill="#374151"/>
-                            <rect x="35" y="35" width="5" height="5" rx="0.5" fill="#374151"/>
-                          </svg>
-                          <p className="text-[9px] font-semibold text-gray-500">QR Code</p>
-                          <p className="text-[8px] text-gray-400">${selectedPlan.price}</p>
-                        </div>
+                    <img
+                      src={PLAN_QR[selected]}
+                      alt="KHQR code"
+                      className={`w-full max-w-[200px] object-contain transition-opacity duration-300 ${qrLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => setQrLoaded(true)}
+                      onError={() => { setQrFailed(true); setQrLoaded(true); }}
+                    />
+                    {qrFailed && (
+                      <div className="flex h-[160px] w-[160px] flex-col items-center justify-center rounded-xl bg-gray-100">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-2 opacity-30">
+                          <rect x="2" y="2" width="18" height="18" rx="2" stroke="#374151" strokeWidth="2.5"/>
+                          <rect x="5" y="5" width="12" height="12" rx="1" fill="#374151"/>
+                          <rect x="28" y="2" width="18" height="18" rx="2" stroke="#374151" strokeWidth="2.5"/>
+                          <rect x="31" y="5" width="12" height="12" rx="1" fill="#374151"/>
+                          <rect x="2" y="28" width="18" height="18" rx="2" stroke="#374151" strokeWidth="2.5"/>
+                          <rect x="5" y="31" width="12" height="12" rx="1" fill="#374151"/>
+                        </svg>
+                        <p className="text-[9px] text-gray-400">QR unavailable</p>
                       </div>
-                    ) : (
-                      <img
-                        src={PLAN_QR[selected]}
-                        alt="KHQR"
-                        className={`h-[180px] w-[180px] object-contain transition-opacity duration-300 ${qrLoaded ? 'opacity-100' : 'opacity-0'}`}
-                        onLoad={() => setQrLoaded(true)}
-                        onError={() => { setQrFailed(true); setQrLoaded(true); }}
-                      />
                     )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Save + Share row */}
-            <div className="flex items-center gap-2 px-4 pb-3">
+            {/* Actions + status below card */}
+            <div className="px-4 pt-4 pb-2">
+              {/* Save QR button */}
               <button
                 onClick={saveQr}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-[12px] font-semibold transition hover:brightness-110 active:scale-[0.98]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[12px] font-semibold transition hover:brightness-110 active:scale-[0.98]"
                 style={{
                   border: '1.5px solid rgba(255,255,255,0.1)',
                   background: 'rgba(255,255,255,0.05)',
-                  color: 'rgba(255,255,255,0.8)',
+                  color: 'rgba(255,255,255,0.75)',
                 }}
               >
-                <Download size={14} />
-                {km ? 'រក្សាទុក QR' : 'Save QR'}
+                <Download size={13} />
+                {km ? 'រក្សាទុក QR ទៅ Gallery' : 'Save QR to Gallery'}
               </button>
-              <button
-                onClick={saveQr}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition hover:bg-white/10"
+
+              {/* Waiting pill */}
+              <div
+                className="mt-2.5 flex items-center gap-2.5 rounded-xl px-3 py-2.5"
                 style={{
-                  border: '1.5px solid rgba(255,255,255,0.08)',
-                  background: 'rgba(255,255,255,0.03)',
-                  color: 'rgba(255,255,255,0.45)',
+                  border: '1px solid rgba(15,143,114,0.2)',
+                  background: 'rgba(15,143,114,0.07)',
                 }}
               >
-                <Share2 size={14} />
-              </button>
-            </div>
-
-            {/* Waiting indicator */}
-            <div
-              className="mx-4 mb-3 flex items-center gap-3 rounded-xl px-3 py-3"
-              style={{
-                border: '1px solid rgba(15,143,114,0.2)',
-                background: 'rgba(15,143,114,0.06)',
-              }}
-            >
-              <Loader2 size={14} className="animate-spin shrink-0 text-[#0F8F72]" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-white/70">
-                  {km ? 'កំពុងរង់ចាំការទូទាត់…' : 'Waiting for payment…'}
-                </p>
-                <p className="text-[9.5px] text-white/35">
-                  {km ? 'VIP ដោះសោស្វ័យប្រវត្តិពេល ABA បញ្ជាក់' : 'Auto-unlocks when ABA confirms'}
-                </p>
+                <Loader2 size={13} className="animate-spin shrink-0 text-[#0F8F72]" />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold leading-tight text-white/70">
+                    {km ? 'កំពុងរង់ចាំការទូទាត់…' : 'Waiting for payment…'}
+                  </p>
+                  <p className="text-[9px] text-white/35">
+                    {km ? 'ដោះសោ VIP ស្វ័យប្រវត្តិពេល ABA បញ្ជាក់' : 'Auto-unlocks when ABA confirms'}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Instruction text */}
-            <div className="px-4 pb-2">
-              <p className="text-center text-[10px] leading-relaxed text-white/40">
+              {/* Instruction */}
+              <p className="mt-2.5 text-center text-[9.5px] leading-relaxed text-white/35">
                 {km
-                  ? 'ស្វែងដោយប្រើ ABA Mobile ឬ App ធនាគារណាទៀតដែលគាំទ្រ KHQR ដើម្បីបង់ប្រាក់ Premium និងដោះសោការចូលមើលភ្លាម'
-                  : 'Scan with ABA Mobile or any KHQR-supported banking app to pay and unlock Premium instantly'}
+                  ? 'ស្វែង QR ដោយប្រើ ABA Mobile ឬ App ធនាគារណាដែលគាំទ្រ KHQR\nដើម្បីបង់ប្រាក់ និងដោះសោ VIP ភ្លាមៗ'
+                  : 'Scan with ABA Mobile or any KHQR banking app\nto pay and unlock Premium instantly'}
               </p>
             </div>
 
-            {/* ABA + KHQR badge image */}
-            <div className="flex items-center justify-center pb-4 pt-1">
-              <img
-                src="/assets/images/image.png"
-                alt="ABA PAY · KHQR"
-                className="h-10 object-contain"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-            </div>
-
             {/* Footer */}
-            <div className="flex items-center justify-center gap-1.5 border-t border-white/[0.05] py-2.5">
+            <div className="flex items-center justify-center gap-1.5 border-t border-white/[0.04] py-2.5 mt-1">
               <ShieldCheck size={9} className="text-white/20" />
-              <p className="text-[8.5px] text-white/20">{t.subSecFooter ?? 'Secured checkout · Powered by ABA PayWay KHQR'}</p>
+              <p className="text-[8px] text-white/20">{t.subSecFooter ?? 'Secured · Powered by ABA PayWay KHQR'}</p>
             </div>
           </div>
         )}
