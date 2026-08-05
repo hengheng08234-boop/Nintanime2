@@ -214,12 +214,6 @@ export const appText = {
     subManualIntro:
       'Scan the QR with your banking app, then upload a screenshot of the receipt — our system checks it automatically.',
     subIvePaidUpload: 'Upload Receipt',
-    subMatchCodeTitle: 'Your payment code',
-    subMatchCodeHint:
-      'Add this code as the Message / Note when you pay in ABA Mobile — it lets us confirm your payment instantly, automatically.',
-    subMatchCodeCopied: 'Copied!',
-    subWaitAutoConfirm: "I've Paid — Wait for Confirmation",
-    subOrUploadInstead: "Forgot to add the code? Upload a screenshot instead",
     subCheckNameLabel: 'Recipient name',
     subCheckRefLabel: 'App reference tag',
     subCheckDateLabel: 'Payment date/time',
@@ -480,12 +474,6 @@ export const appText = {
     subManualIntro:
       'ស្កេន QR ជាមួយកម្មវិធីធនាគាររបស់អ្នក រួចអាប់ឡូតរូបថតអេក្រង់នៃវិក្កយបត្រ — ប្រព័ន្ធរបស់យើងនឹងពិនិត្យដោយស្វ័យប្រវត្តិ។',
     subIvePaidUpload: 'អាប់ឡូតវិក្កយបត្រ',
-    subMatchCodeTitle: 'កូដទូទាត់របស់អ្នក',
-    subMatchCodeHint:
-      'សូមវាយបញ្ចូលកូដនេះក្នុងប្រអប់ Message / Note ពេលទូទាត់ក្នុង ABA Mobile — វានឹងជួយឱ្យប្រព័ន្ធបញ្ជាក់ការទូទាត់របស់អ្នកភ្លាមៗ ដោយស្វ័យប្រវត្តិ។',
-    subMatchCodeCopied: 'បានចម្លង!',
-    subWaitAutoConfirm: 'ខ្ញុំបានទូទាត់ — រង់ចាំការបញ្ជាក់',
-    subOrUploadInstead: 'ភ្លេចដាក់កូដមែនទេ? អាប់ឡូតរូបថតអេក្រង់ជំនួសវិញ',
     subCheckNameLabel: 'ឈ្មោះអ្នកទទួល',
     subCheckRefLabel: 'លេខកូដយោង (App)',
     subCheckDateLabel: 'ថ្ងៃ/ម៉ោង ទូទាត់',
